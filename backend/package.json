@@ -1,0 +1,32 @@
+{
+  "name": "inovar-projetos-backend",
+  "version": "1.0.0",
+  "description": "Backend do Sistema Inovar Projetos - Gestão de Consultoria",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "init-db": "node src/database/init.js"
+  },
+  "keywords": [
+    "consultoria",
+    "projetos",
+    "gestão",
+    "supermercados"
+  ],
+  "author": "Inovar Varejo",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "sqlite3": "^5.1.6",
+    "uuid": "^9.0.0",
+    "dotenv": "^16.0.3",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
