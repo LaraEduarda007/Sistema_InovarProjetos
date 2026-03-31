@@ -172,7 +172,62 @@ O banco SQLite é criado automaticamente na primeira execução com as seguintes
 - notificacoes: avisos do sistema para usuários
 - projeto_consultor: relação entre projetos e consultores
 
+---
 
+## Cronograma de Desenvolvimento
+
+Dia 1 (30/03):
+- Setup inicial com React e estrutura básica
+- Componentes de layout e navegação
+- Rotas e autenticação funcional
+
+Dia 2 (31/03):
+- Backend Express com SQLite configurado
+- APIs REST para projetos e atividades
+- CRUD completo e testado
+
+Dia 3 (01/04):
+- Kanban com drag and drop
+- Upload de imagens funcional
+
+Dia 4 (02/04):
+- Exportação em PDF
+- Exportação em Excel
+
+Dia 5 (03/04):
+- Testes e ajustes finais
+- Versão estável pronta
+
+Dias 6-7 (04-05/04):
+- Documentação técnica completa
+- Vídeo de apresentação
+
+Dia 8 (06/04):
+- Entrega final
+
+---
+
+## Vídeo de Apresentação
+
+Duração aproximada: 5 minutos
+
+Conteúdo:
+1. Contextualização da empresa Inovar Varejo
+2. Problema identificado e solução proposta
+3. Demonstração das funcionalidades principais
+4. Stack tecnológico utilizado
+5. Desafios enfrentados durante o desenvolvimento
+6. Perspectivas de melhorias futuras
+
+---
+
+## Contato e Informações
+
+Desenvolvido por: equipe do Projeto Integrador III-B
+Parceiro: Inovar Varejo Consultoria
+Data de desenvolvimento: Março e Abril de 2026
+
+---
 
 ## Referências Técnicas
 

@@ -2,9 +2,11 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import Login from './pages/Login';
+import AdminDashboard from './pages/AdminDashboard';
+import ConsultorDashboard from './pages/ConsultorDashboard';
 import './App.css';
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children, requiredRole }) {
   const { usuario, carregando } = useApp();
 
   if (carregando) {
@@ -15,47 +17,38 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" />;
   }
 
+  if (requiredRole && usuario.perfil !== requiredRole) {
+    return <Navigate to="/login" />;
+  }
+
   return children;
 }
 
 function AppContent() {
-  const { usuario } = useApp();
-
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
 
-      {/* Rotas Admin */}
       <Route
-        path="/admin/*"
+        path="/admin/dashboard"
         element={
-          <ProtectedRoute>
-            <div className="admin-placeholder">
-              <h1>✅ Dashboard Admin Funcionando!</h1>
-              <p>Usuário: {usuario?.nome}</p>
-              <p>Email: {usuario?.email}</p>
-              <p>Página em desenvolvimento...</p>
-            </div>
+          <ProtectedRoute requiredRole="admin">
+            <AdminDashboard />
           </ProtectedRoute>
         }
       />
 
-      {/* Rotas Consultor */}
       <Route
-        path="/consultor/*"
+        path="/consultor/dashboard"
         element={
-          <ProtectedRoute>
-            <div className="consultor-placeholder">
-              <h1>✅ Dashboard Consultor Funcionando!</h1>
-              <p>Usuário: {usuario?.nome}</p>
-              <p>Especialidade: {usuario?.especialidade}</p>
-              <p>Página em desenvolvimento...</p>
-            </div>
+          <ProtectedRoute requiredRole="consultor">
+            <ConsultorDashboard />
           </ProtectedRoute>
         }
       />
 
       <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
   );
 }
