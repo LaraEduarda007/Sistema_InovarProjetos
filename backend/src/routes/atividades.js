@@ -14,6 +14,6 @@ router.get('/', verifyToken, listarAtividades);
 router.get('/:id', verifyToken, obterAtividade);
 router.post('/', verifyToken, criarAtividade);
 router.put('/:id', verifyToken, atualizarAtividade);
-router.delete('/:id', verifyToken, atualizarAtividade);
+router.delete('/:id', verifyToken, deletarAtividade);
 
 export default router;

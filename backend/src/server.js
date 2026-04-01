@@ -8,6 +8,8 @@ import authRoutes from './routes/auth.js';
 import projetosRoutes from './routes/projetos.js';
 import atividadesRoutes from './routes/atividades.js';
 import relatoriosRoutes from './routes/relatorios.js';
+import cobrancasRoutes from './routes/cobrancas.js';
+import notificacoesRoutes from './routes/notificacoes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +29,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/projetos', projetosRoutes);
 app.use('/api/atividades', atividadesRoutes);
 app.use('/api/relatorios', relatoriosRoutes);
+app.use('/api/cobrancas', cobrancasRoutes);
+app.use('/api/notificacoes', notificacoesRoutes);
 
 // Tratamento de erros 404
 app.use((req, res) => {
@@ -38,10 +42,12 @@ app.listen(PORT, () => {
   console.log(`\n🚀 Servidor rodando em http://localhost:${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`\n📚 Documentação das APIs:`);
-  console.log(`  POST   /api/auth/login         - Fazer login`);
-  console.log(`  GET    /api/projetos           - Listar projetos`);
-  console.log(`  GET    /api/atividades         - Listar atividades`);
-  console.log(`  GET    /api/relatorios         - Listar relatórios\n`);
+  console.log(`  POST   /api/auth/login           - Fazer login`);
+  console.log(`  GET    /api/projetos             - Listar projetos`);
+  console.log(`  GET    /api/atividades           - Listar atividades`);
+  console.log(`  GET    /api/relatorios           - Listar relatórios`);
+  console.log(`  GET    /api/cobrancas            - Listar cobranças`);
+  console.log(`  GET    /api/notificacoes         - Listar notificações\n`);
 });
 
 // Graceful shutdown
