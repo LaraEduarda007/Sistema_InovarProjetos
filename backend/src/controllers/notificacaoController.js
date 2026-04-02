@@ -9,7 +9,7 @@ export async function listarNotificacoes(req, res) {
     const notificacoes = await allQuery(`
       SELECT * FROM notificacoes
       WHERE usuario_id = ?
-      ORDER BY data_criacao DESC
+      ORDER BY criada_em DESC
     `, [usuarioId]);
 
     res.json({ sucesso: true, notificacoes });
@@ -35,9 +35,9 @@ export async function obterNotificacao(req, res) {
 
     // Marcar como lida
     await runQuery(
-      'UPDATE notificacoes SET lida = 1, data_leitura = CURRENT_TIMESTAMP WHERE id = ?',
-      [id]
-    );
+  'UPDATE notificacoes SET lida = 1 WHERE id = ?',
+  [id]
+);
 
     res.json({ sucesso: true, notificacao: { ...notificacao, lida: 1 } });
   } catch (error) {
@@ -96,9 +96,9 @@ export async function marcarTodasComoLidas(req, res) {
     const { id: usuarioId } = req.usuario;
 
     await runQuery(
-      'UPDATE notificacoes SET lida = 1, data_leitura = CURRENT_TIMESTAMP WHERE usuario_id = ? AND lida = 0',
-      [usuarioId]
-    );
+  'UPDATE notificacoes SET lida = 1 WHERE usuario_id = ? AND lida = 0',
+  [usuarioId]
+);
 
     res.json({ sucesso: true, mensagem: 'Todas as notificações foram marcadas como lidas' });
   } catch (error) {

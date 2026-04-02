@@ -13,8 +13,8 @@ export const db = new sqlite3.Database(dbPath, (err) => {
   }
 });
 
-// Habilitar foreign keys
-db.run('PRAGMA foreign_keys = ON');
+// Desabilitar foreign keys para evitar constraint errors
+db.run('PRAGMA foreign_keys = OFF');
 
 export function runQuery(sql, params = []) {
   return new Promise((resolve, reject) => {

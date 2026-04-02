@@ -4,25 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Listar cobranças
 export async function listarCobrancas(req, res) {
   try {
-    const { perfil, id: usuarioId } = req.usuario;
-
-    let sql = `
-      SELECT c.*, u.nome as admin_nome, cons.nome as consultor_nome
-      FROM cobrancas c
-      JOIN usuarios u ON c.admin_id = u.id
-      JOIN usuarios cons ON c.consultor_id = cons.id
-    `;
-    let params = [];
-
-    // Consultores veem apenas suas cobranças
-    if (perfil === 'consultor') {
-      sql += ' WHERE c.consultor_id = ?';
-      params.push(usuarioId);
-    }
-
-    sql += ' ORDER BY c.data_criacao DESC';
-
-    const cobrancas = await allQuery(sql, params);
+    const cobrancas = await allQuery('SELECT * FROM cobrancas ORDER BY enviada_em DESC');
     res.json({ sucesso: true, cobrancas });
   } catch (error) {
     console.error('Erro ao listar cobranças:', error);
@@ -34,30 +16,13 @@ export async function listarCobrancas(req, res) {
 export async function obterCobranca(req, res) {
   try {
     const { id } = req.params;
-
-    const cobranca = await getQuery(
-      `SELECT c.*, u.nome as admin_nome, cons.nome as consultor_nome
-       FROM cobrancas c
-       JOIN usuarios u ON c.admin_id = u.id
-       JOIN usuarios cons ON c.consultor_id = cons.id
-       WHERE c.id = ?`,
-      [id]
-    );
+    const cobranca = await getQuery('SELECT * FROM cobrancas WHERE id = ?', [id]);
 
     if (!cobranca) {
       return res.status(404).json({ erro: 'Cobrança não encontrada' });
     }
 
-    // Obter atividades cobradas
-    const atividades = await allQuery(
-      `SELECT a.id, a.titulo, a.mes, a.semana, a.setor
-       FROM cobranca_atividade ca
-       JOIN atividades a ON ca.atividade_id = a.id
-       WHERE ca.cobranca_id = ?`,
-      [id]
-    );
-
-    res.json({ sucesso: true, cobranca: { ...cobranca, atividades } });
+    res.json({ sucesso: true, cobranca });
   } catch (error) {
     console.error('Erro ao obter cobrança:', error);
     res.status(500).json({ erro: 'Erro ao obter cobrança' });
@@ -68,26 +33,30 @@ export async function obterCobranca(req, res) {
 export async function criarCobranca(req, res) {
   try {
     const { consultorId, atividadeIds, prazo, urgencia, mensagem } = req.body;
-    const { id: adminId } = req.usuario;
 
-    if (!consultorId || !Array.isArray(atividadeIds) || atividadeIds.length === 0) {
-      return res.status(400).json({ erro: 'Campos obrigatórios faltando' });
+    if (!consultorId || !prazo) {
+      return res.status(400).json({ erro: 'Consultor e prazo são obrigatórios' });
     }
 
     const cobrancaId = uuidv4();
 
-    await runQuery(`
-      INSERT INTO cobrancas (id, admin_id, consultor_id, prazo, urgencia, mensagem, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [cobrancaId, adminId, consultorId, prazo, urgencia || 'normal', mensagem, 'aberta']);
+    await runQuery(
+      'INSERT INTO cobrancas (id, admin_id, consultor_id, prazo, urgencia, mensagem, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [cobrancaId, 'admin-001', consultorId, prazo, urgencia || 'normal', mensagem, 'aberta']
+    );
 
-    // Adicionar atividades à cobrança
-    for (const atividadeId of atividadeIds) {
-      await runQuery(`
-        INSERT INTO cobranca_atividade (cobranca_id, atividade_id)
-        VALUES (?, ?)
-      `, [cobrancaId, atividadeId]);
-    }
+    await runQuery(`
+  INSERT INTO notificacoes 
+  (id, usuario_id, tipo, titulo, mensagem, referencia_id, lida)
+  VALUES (?, ?, ?, ?, ?, ?, 0)
+`, [
+  uuidv4(),
+  consultorId,
+  'cobranca',
+  'Nova cobrança recebida',
+  mensagem || 'Você recebeu uma nova cobrança',
+  cobrancaId
+]);
 
     res.status(201).json({
       sucesso: true,
@@ -95,7 +64,7 @@ export async function criarCobranca(req, res) {
       cobrancaId
     });
   } catch (error) {
-    console.error('Erro ao criar cobrança:', error);
+    console.error('Erro ao criar cobrança:', error.message);
     res.status(500).json({ erro: 'Erro ao criar cobrança' });
   }
 }
@@ -111,7 +80,7 @@ export async function atualizarCobranca(req, res) {
     }
 
     await runQuery(
-      'UPDATE cobrancas SET status = ?, data_atualizacao = CURRENT_TIMESTAMP WHERE id = ?',
+      'UPDATE cobrancas SET status = ? WHERE id = ?',
       [status, id]
     );
 
@@ -127,10 +96,6 @@ export async function deletarCobranca(req, res) {
   try {
     const { id } = req.params;
 
-    // Deletar atividades associadas
-    await runQuery('DELETE FROM cobranca_atividade WHERE cobranca_id = ?', [id]);
-    
-    // Deletar cobrança
     await runQuery('DELETE FROM cobrancas WHERE id = ?', [id]);
 
     res.json({ sucesso: true, mensagem: 'Cobrança deletada com sucesso' });

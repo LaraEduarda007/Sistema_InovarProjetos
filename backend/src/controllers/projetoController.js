@@ -3,27 +3,19 @@ import { v4 as uuidv4 } from 'uuid';
 
 export async function listarProjetos(req, res) {
   try {
-    const { perfil, id: usuarioId } = req.usuario;
+    const projetos = await allQuery(`
+  SELECT 
+    p.id,
+    p.nome,
+    p.status,
+    p.duracao_meses,
+    u.nome as consultor_nome
+  FROM projetos p
+  LEFT JOIN projeto_consultor pc ON pc.projeto_id = p.id
+  LEFT JOIN usuarios u ON u.id = pc.consultor_id
+  ORDER BY p.criado_em DESC
+`);
 
-    let sql = 'SELECT * FROM projetos';
-    let params = [];
-
-    // Consultores veem apenas seus projetos
-    if (perfil === 'consultor') {
-      sql += ` WHERE id IN (
-        SELECT projeto_id FROM projeto_consultor WHERE consultor_id = ?
-      )`;
-      params.push(usuarioId);
-    }
-    // Clientes veem apenas seu projeto
-    else if (perfil === 'cliente') {
-      sql += ' WHERE cliente_id = ?';
-      params.push(usuarioId);
-    }
-
-    sql += ' ORDER BY criado_em DESC';
-
-    const projetos = await allQuery(sql, params);
     res.json({ sucesso: true, projetos });
   } catch (error) {
     console.error('Erro ao listar projetos:', error);
@@ -57,35 +49,57 @@ export async function obterProjeto(req, res) {
 
 export async function criarProjeto(req, res) {
   try {
-    const { nome, clienteId, dataInicio, duracaoMeses, consultores } = req.body;
+    const { 
+      nome, 
+      nome_cliente, 
+      dataInicio, 
+      data_inicio, 
+      duracaoMeses, 
+      duracao_meses,
+      consultor_id
+    } = req.body;
+
     const { id: usuarioId } = req.usuario;
 
-    if (!nome || !clienteId || !dataInicio) {
-      return res.status(400).json({ erro: 'Campos obrigatórios faltando' });
+    const nomeCliente = nome_cliente || nome;
+    const dataI = data_inicio || dataInicio;
+    const duracao = duracao_meses || duracaoMeses || 12;
+
+    if (!nomeCliente || !dataI || !consultor_id) {
+      return res.status(400).json({ 
+        erro: 'Nome, data de início e consultor são obrigatórios' 
+      });
     }
 
     const projetoId = uuidv4();
 
-    await runQuery(`
-      INSERT INTO projetos (id, nome, cliente_id, data_inicio, duracao_meses, criado_por_id)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [projetoId, nome, clienteId, dataInicio, duracaoMeses || 12, usuarioId]);
+    await runQuery(
+      `INSERT INTO projetos 
+      (id, nome, cliente_id, data_inicio, duracao_meses, criado_por_id) 
+      VALUES (?, ?, ?, ?, ?, ?)`,
+      [projetoId, nomeCliente, 'admin-001', dataI, duracao, usuarioId || 'admin-001']
+    );
 
-    // Adicionar consultores ao projeto
-    if (Array.isArray(consultores)) {
-      for (const consultor of consultores) {
-        await runQuery(`
-          INSERT INTO projeto_consultor (projeto_id, consultor_id, area_atuacao)
-          VALUES (?, ?, ?)
-        `, [projetoId, consultor.id, consultor.area_atuacao]);
-      }
-    }
+    // 🔥 AQUI ESTÁ O PULO DO GATO
+    await runQuery(
+      `INSERT INTO projeto_consultor (projeto_id, consultor_id)
+       VALUES (?, ?)`,
+      [projetoId, consultor_id]
+    );
 
     res.status(201).json({
       sucesso: true,
       mensagem: 'Projeto criado com sucesso',
-      projetoId
+      projeto: {
+        id: projetoId,
+        nome: nomeCliente,
+        data_inicio: dataI,
+        duracao_meses: duracao,
+        consultor_id,
+        status: 'ativo'
+      }
     });
+
   } catch (error) {
     console.error('Erro ao criar projeto:', error);
     res.status(500).json({ erro: 'Erro ao criar projeto' });

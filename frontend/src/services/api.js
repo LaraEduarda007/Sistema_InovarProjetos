@@ -104,8 +104,8 @@ export const atividadesService = {
 // Relatórios
 export const relatoriosService = {
   listar: async (projetoId) => {
-    const response = await api.get('/relatorios', { params: { projetoId } });
-    return response.data;
+    const response = await api.get('/relatorios', { params: { projetoId: projetoId || '' } });
+    return { sucesso: true, relatorios: response.data.relatorios || [] };
   },
 
   obter: async (id) => {
@@ -115,6 +115,67 @@ export const relatoriosService = {
 
   criar: async (dados) => {
     const response = await api.post('/relatorios', dados);
+    return response.data;
+  }
+};
+
+// Cobranças
+export const cobrancasService = {
+  listar: async () => {
+    const response = await api.get('/cobrancas');
+    return response.data;
+  },
+
+  obter: async (id) => {
+    const response = await api.get(`/cobrancas/${id}`);
+    return response.data;
+  },
+
+  criar: async (dados) => {
+    const response = await api.post('/cobrancas', dados);
+    return response.data;
+  },
+
+  atualizar: async (id, dados) => {
+    const response = await api.put(`/cobrancas/${id}`, dados);
+    return response.data;
+  },
+
+  deletar: async (id) => {
+    const response = await api.delete(`/cobrancas/${id}`);
+    return response.data;
+  }
+};
+
+// Notificações
+export const notificacoesService = {
+  listar: async () => {
+    const response = await api.get('/notificacoes');
+    return response.data;
+  },
+
+  obter: async (id) => {
+    const response = await api.get(`/notificacoes/${id}`);
+    return response.data;
+  },
+
+  criar: async (dados) => {
+    const response = await api.post('/notificacoes', dados);
+    return response.data;
+  },
+
+  marcarComoLida: async (id) => {
+    const response = await api.put(`/notificacoes/${id}/lida`);
+    return response.data;
+  },
+
+  marcarTodasComoLidas: async () => {
+    const response = await api.put('/notificacoes/marcar-todas-como-lidas');
+    return response.data;
+  },
+
+  deletar: async (id) => {
+    const response = await api.delete(`/notificacoes/${id}`);
     return response.data;
   }
 };

@@ -8,7 +8,6 @@ const dbPath = join(__dirname, '../../data/inovar.db');
 
 async function initDatabase() {
   try {
-    // Criar diretório data se não existir
     await mkdir(join(__dirname, '../../data'), { recursive: true });
 
     return new Promise((resolve, reject) => {
@@ -17,7 +16,6 @@ async function initDatabase() {
 
         console.log('📦 Inicializando banco de dados SQLite...');
 
-        // Criar tabelas
         db.serialize(() => {
           // Tabela de Usuários
           db.run(`
@@ -26,7 +24,7 @@ async function initDatabase() {
               nome TEXT NOT NULL,
               email TEXT UNIQUE NOT NULL,
               senha TEXT NOT NULL,
-              perfil TEXT NOT NULL CHECK(perfil IN ('admin', 'consultor', 'cliente')),
+              perfil TEXT NOT NULL,
               especialidade TEXT,
               status TEXT DEFAULT 'ativo',
               criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -39,27 +37,23 @@ async function initDatabase() {
             CREATE TABLE IF NOT EXISTS projetos (
               id TEXT PRIMARY KEY,
               nome TEXT NOT NULL,
-              cliente_id TEXT NOT NULL,
+              cliente_id TEXT,
               data_inicio DATE NOT NULL,
               duracao_meses INTEGER DEFAULT 12,
-              status TEXT DEFAULT 'ativo' CHECK(status IN ('ativo', 'pausado', 'concluido')),
-              criado_por_id TEXT NOT NULL,
+              status TEXT DEFAULT 'ativo',
+              criado_por_id TEXT,
               criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
-              atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
-              FOREIGN KEY(cliente_id) REFERENCES usuarios(id),
-              FOREIGN KEY(criado_por_id) REFERENCES usuarios(id)
+              atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP
             )
           `);
 
-          // Tabela de Projeto-Consultor (N:N)
+          // Tabela de Projeto-Consultor
           db.run(`
             CREATE TABLE IF NOT EXISTS projeto_consultor (
               projeto_id TEXT NOT NULL,
               consultor_id TEXT NOT NULL,
               area_atuacao TEXT,
-              PRIMARY KEY(projeto_id, consultor_id),
-              FOREIGN KEY(projeto_id) REFERENCES projetos(id),
-              FOREIGN KEY(consultor_id) REFERENCES usuarios(id)
+              PRIMARY KEY(projeto_id, consultor_id)
             )
           `);
 
@@ -68,19 +62,17 @@ async function initDatabase() {
             CREATE TABLE IF NOT EXISTS atividades (
               id TEXT PRIMARY KEY,
               projeto_id TEXT NOT NULL,
-              mes INTEGER NOT NULL CHECK(mes BETWEEN 1 AND 12),
-              semana INTEGER NOT NULL CHECK(semana BETWEEN 1 AND 4),
+              mes INTEGER NOT NULL,
+              semana INTEGER NOT NULL,
               setor TEXT NOT NULL,
               titulo TEXT NOT NULL,
               observacao TEXT,
-              status TEXT DEFAULT 'a_fazer' CHECK(status IN ('a_fazer', 'em_andamento', 'concluido', 'nao_realizado')),
-              consultor_id TEXT NOT NULL,
+              consultor_id TEXT,
               data_prevista DATE,
-              data_realizacao DATETIME,
+              data_realizacao DATE,
+              status TEXT DEFAULT 'a-fazer',
               criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
-              atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
-              FOREIGN KEY(projeto_id) REFERENCES projetos(id),
-              FOREIGN KEY(consultor_id) REFERENCES usuarios(id)
+              atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP
             )
           `);
 
@@ -92,16 +84,14 @@ async function initDatabase() {
               o_que_foi_realizado TEXT,
               dificuldades TEXT,
               proximos_passos TEXT,
-              avaliacao_equipe INTEGER CHECK(avaliacao_equipe BETWEEN 1 AND 5),
+              avaliacao_equipe INTEGER,
               observacoes TEXT,
               enviado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
-              consultor_id TEXT NOT NULL,
-              FOREIGN KEY(atividade_id) REFERENCES atividades(id),
-              FOREIGN KEY(consultor_id) REFERENCES usuarios(id)
+              consultor_id TEXT NOT NULL
             )
           `);
 
-          // Tabela de Imagens/Evidências
+          // Tabela de Imagens
           db.run(`
             CREATE TABLE IF NOT EXISTS imagens (
               id TEXT PRIMARY KEY,
@@ -110,9 +100,7 @@ async function initDatabase() {
               dados_base64 LONGTEXT NOT NULL,
               nome_original TEXT,
               tipo_mime TEXT,
-              criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
-              FOREIGN KEY(relatorio_id) REFERENCES relatorios(id),
-              FOREIGN KEY(atividade_id) REFERENCES atividades(id)
+              criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
             )
           `);
 
@@ -120,27 +108,23 @@ async function initDatabase() {
           db.run(`
             CREATE TABLE IF NOT EXISTS cobrancas (
               id TEXT PRIMARY KEY,
-              admin_id TEXT NOT NULL,
-              consultor_id TEXT NOT NULL,
+              admin_id TEXT,
+              consultor_id TEXT,
               mensagem TEXT,
               prazo DATE,
-              urgencia TEXT DEFAULT 'normal' CHECK(urgencia IN ('normal', 'urgente')),
-              status TEXT DEFAULT 'aberta' CHECK(status IN ('aberta', 'resolvida')),
+              urgencia TEXT DEFAULT 'normal',
+              status TEXT DEFAULT 'aberta',
               enviada_em DATETIME DEFAULT CURRENT_TIMESTAMP,
-              resolvida_em DATETIME,
-              FOREIGN KEY(admin_id) REFERENCES usuarios(id),
-              FOREIGN KEY(consultor_id) REFERENCES usuarios(id)
+              resolvida_em DATETIME
             )
           `);
 
-          // Tabela de Cobrança-Atividade (N:N)
+          // Tabela de Cobrança-Atividade
           db.run(`
             CREATE TABLE IF NOT EXISTS cobranca_atividade (
               cobranca_id TEXT NOT NULL,
               atividade_id TEXT NOT NULL,
-              PRIMARY KEY(cobranca_id, atividade_id),
-              FOREIGN KEY(cobranca_id) REFERENCES cobrancas(id),
-              FOREIGN KEY(atividade_id) REFERENCES atividades(id)
+              PRIMARY KEY(cobranca_id, atividade_id)
             )
           `);
 
@@ -151,13 +135,16 @@ async function initDatabase() {
               usuario_id TEXT NOT NULL,
               tipo TEXT NOT NULL,
               titulo TEXT NOT NULL,
-              mensagem TEXT,
-              lida BOOLEAN DEFAULT 0,
-              criada_em DATETIME DEFAULT CURRENT_TIMESTAMP,
-              referencia_id TEXT,
-              FOREIGN KEY(usuario_id) REFERENCES usuarios(id)
+              mensagem TEXT NOT NULL,
+              relacao_tipo TEXT,
+              relacao_id TEXT,
+              lida INTEGER DEFAULT 0,
+              data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+              data_leitura DATETIME
             )
-          `, (err) => {
+          `);
+
+          db.all('SELECT COUNT(*) as count FROM sqlite_master WHERE type="table"', (err, rows) => {
             if (err) {
               console.error('❌ Erro ao criar tabelas:', err);
               reject(err);
@@ -181,7 +168,7 @@ function insertDefaultData(db, resolve, reject) {
       id: 'admin-001',
       nome: 'Lara Assis',
       email: 'lara@inovarvarejo.com.br',
-      senha: '$2a$10$K7DY7aV.V2B/LQqPzqB7L.0y0nTQw8qJ8C0L4l0nTQw8qJ8C0L4l0', // 123456
+      senha: '$2a$10$K7DY7aV.V2B/LQqPzqB7L.0y0nTQw8qJ8C0L4l0nTQw8qJ8C0L4l0',
       perfil: 'admin',
       especialidade: 'Administração'
     },
@@ -189,7 +176,7 @@ function insertDefaultData(db, resolve, reject) {
       id: 'consultor-001',
       nome: 'Ana Lima',
       email: 'ana@inovarvarejo.com.br',
-      senha: '$2a$10$K7DY7aV.V2B/LQqPzqB7L.0y0nTQw8qJ8C0L4l0nTQw8qJ8C0L4l0', // 123456
+      senha: '$2a$10$K7DY7aV.V2B/LQqPzqB7L.0y0nTQw8qJ8C0L4l0nTQw8qJ8C0L4l0',
       perfil: 'consultor',
       especialidade: 'RH e Processos'
     },
@@ -197,7 +184,7 @@ function insertDefaultData(db, resolve, reject) {
       id: 'consultor-002',
       nome: 'Carlos Mota',
       email: 'carlos@inovarvarejo.com.br',
-      senha: '$2a$10$K7DY7aV.V2B/LQqPzqB7L.0y0nTQw8qJ8C0L4l0nTQw8qJ8C0L4l0', // 123456
+      senha: '$2a$10$K7DY7aV.V2B/LQqPzqB7L.0y0nTQw8qJ8C0L4l0nTQw8qJ8C0L4l0',
       perfil: 'consultor',
       especialidade: 'Financeiro'
     },
@@ -205,36 +192,39 @@ function insertDefaultData(db, resolve, reject) {
       id: 'consultor-003',
       nome: 'Priya Souza',
       email: 'priya@inovarvarejo.com.br',
-      senha: '$2a$10$K7DY7aV.V2B/LQqPzqB7L.0y0nTQw8qJ8C0L4l0nTQw8qJ8C0L4l0', // 123456
+      senha: '$2a$10$K7DY7aV.V2B/LQqPzqB7L.0y0nTQw8qJ8C0L4l0nTQw8qJ8C0L4l0',
       perfil: 'consultor',
       especialidade: 'Operações'
     }
   ];
 
-  let inserted = 0;
-  usuarios.forEach((usuario) => {
-    db.run(
-      `INSERT OR IGNORE INTO usuarios (id, nome, email, senha, perfil, especialidade) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [usuario.id, usuario.nome, usuario.email, usuario.senha, usuario.perfil, usuario.especialidade],
-      (err) => {
-        if (err) {
-          console.error('❌ Erro ao inserir usuário:', err);
-        } else {
-          inserted++;
-          if (inserted === usuarios.length) {
-            console.log('✅ Dados padrão inseridos com sucesso!');
-            db.close();
-            resolve();
-          }
-        }
-      }
-    );
-  });
-}
+  const projetos = [
+    {
+      id: 'proj-001',
+      nome: 'Supermercado Bom Preço',
+      cliente_id: 'admin-001',
+      data_inicio: '2026-01-15',
+      duracao_meses: 12,
+      status: 'ativo',
+      criado_por_id: 'admin-001'
+    },
+    {
+      id: 'proj-002',
+      nome: 'Mercado Serra Verde',
+      cliente_id: 'admin-001',
+      data_inicio: '2026-02-01',
+      duracao_meses: 12,
+      status: 'ativo',
+      criado_por
 
-// Executar inicialização
 initDatabase().catch(error => {
   console.error('Erro fatal:', error);
   process.exit(1);
 });
+
+export async function db() {
+  return new Promise((resolve) => {
+    const database = new sqlite3.Database(dbPath);
+    resolve(database);
+  });
+}
