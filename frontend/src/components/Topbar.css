@@ -1,43 +1,44 @@
+/* ── TOPBAR ── */
 .topbar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
 }
 
 .topbar-title {
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 700;
-  color: #0f172a;
+  letter-spacing: -.03em;
+  color: var(--tx);
   margin: 0;
-  letter-spacing: -0.02em;
 }
 
 .topbar-subtitle {
   font-size: 13px;
-  color: #475569;
-  margin-top: 6px;
+  color: var(--mx);
+  margin-top: 2px;
 }
 
+/* ── USUÁRIO ── */
 .topbar-user {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .user-avatar {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1a3f6f 0%, #0d5c47 100%);
-  color: white;
+  background: var(--navy-lt);
+  color: var(--navy);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 14px;
+  flex-shrink: 0;
 }
 
 .user-info {
@@ -49,28 +50,12 @@
 .user-name {
   font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx);
 }
 
 .user-role {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--hx);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-@media (max-width: 768px) {
-  .topbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .topbar-title {
-    font-size: 22px;
-  }
-
-  .topbar-user {
-    align-self: flex-start;
-  }
+  letter-spacing: .05em;
 }

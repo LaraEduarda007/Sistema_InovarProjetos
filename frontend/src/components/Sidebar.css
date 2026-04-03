@@ -1,143 +1,117 @@
+/* ── SIDEBAR ── */
 .sidebar {
   width: 220px;
-  background: linear-gradient(135deg, #1a3f6f 0%, #0d5c47 100%);
-  color: white;
+  flex-shrink: 0;
+  padding: 1.25rem .875rem;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  padding: 20px 0;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  gap: 2px;
+  min-height: 100vh;
 }
 
-.sidebar-header {
-  padding: 0 15px;
-  margin-bottom: 30px;
-}
+/* Cor por perfil — navy para admin, teal para consultor */
+.sidebar-admin     { background: var(--navy); }
+.sidebar-consultor { background: var(--teal); }
 
-.logo {
+/* ── LOGO ── */
+.sb-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
+  margin-bottom: 1.5rem;
+  padding: 0 4px;
 }
-
-.logo-icon {
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+.sb-logo-icon {
+  width: 34px;
+  height: 34px;
+  background: rgba(255,255,255,.16);
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 14px;
+  color: #fff;
   flex-shrink: 0;
 }
-
-.logo-text {
-  min-width: 0;
-}
-
-.logo-name {
+.sb-logo-text {
   font-size: 14px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  color: #fff;
+  letter-spacing: -.02em;
 }
 
-.sidebar-menu {
+/* ── MENU ── */
+.sb-menu {
   flex: 1;
-  overflow-y: auto;
-  padding: 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.menu-item {
-  width: 100%;
+/* Separador */
+.sb-sep {
+  height: 1px;
+  background: rgba(255,255,255,.1);
+  margin: 5px 3px;
+}
+
+/* ── ITEM ── */
+.sb-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--rs);
+  font-size: 13px;
+  color: rgba(255,255,255,.65);
+  cursor: pointer;
+  transition: all .15s;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 13px;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s;
-  margin-bottom: 2px;
   font-family: inherit;
-  text-align: left;
-}
-
-.menu-item:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-}
-
-.menu-icon {
-  width: 6px;
-  height: 6px;
-  display: inline-block;
-}
-
-.menu-label {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sidebar-footer {
-  padding: 0 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  margin-top: 20px;
-  padding-top: 20px;
-}
-
-.logout-btn {
   width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 13px;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s;
-  font-family: inherit;
   text-align: left;
 }
-
-.logout-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
+.sb-item:hover {
+  background: rgba(255,255,255,.14);
+  color: #fff;
+}
+.sb-item.ativo {
+  background: rgba(255,255,255,.14);
+  color: #fff;
+  font-weight: 600;
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    width: 70px;
-  }
+/* ── DOT (indicador) ── */
+.sb-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.35);
+  flex-shrink: 0;
+}
+.sb-item.ativo .sb-dot {
+  background: #fff;
+}
 
-  .sidebar-header {
-    margin-bottom: 20px;
-  }
+/* ── LABEL ── */
+.sb-label { flex: 1; }
 
-  .logo-text {
-    display: none;
-  }
+/* ── BADGE (contador de notificações/cobranças) ── */
+.sb-badge {
+  margin-left: auto;
+  background: #dc2626;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 6px;
+}
 
-  .logo-icon {
-    margin: 0 auto;
-  }
-
-  .menu-label {
-    display: none;
-  }
-
-  .menu-item {
-    justify-content: center;
-    padding: 10px;
-  }
+/* ── FOOTER (Sair) ── */
+.sb-footer {
+  margin-top: auto;
+  padding-top: .5rem;
+  border-top: 1px solid rgba(255,255,255,.1);
 }

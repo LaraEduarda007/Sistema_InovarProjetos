@@ -1,68 +1,82 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import './Sidebar.css';
 
-function Sidebar() {
+const menuAdmin = [
+  { id: 'dashboard',     label: 'Painel geral',   path: '/admin/dashboard' },
+  { id: 'projetos',      label: 'Projetos',        path: '/admin/projetos' },
+  { id: 'kanban',        label: 'Kanban',          path: '/admin/kanban' },
+  { id: 'relatorios',    label: 'Relatórios',      path: '/admin/relatorios' },
+  { id: 'sep1', sep: true },
+  { id: 'cobrancas',     label: 'Cobranças',       path: '/admin/cobrancas', badge: true },
+  { id: 'produtividade', label: 'Produtividade',   path: '/admin/produtividade' },
+  { id: 'sep2', sep: true },
+  { id: 'consultores',   label: 'Consultores',     path: '/admin/consultores' },
+  { id: 'acessos',       label: 'Acessos',         path: '/admin/acessos' },
+];
+
+const menuConsultor = [
+  { id: 'dashboard',     label: 'Meu painel',      path: '/consultor/dashboard' },
+  { id: 'projetos',      label: 'Meus projetos',   path: '/consultor/projetos' },
+  { id: 'kanban',        label: 'Kanban',           path: '/consultor/kanban' },
+  { id: 'relatorios',    label: 'Meus relatórios', path: '/consultor/relatorios' },
+  { id: 'sep1', sep: true },
+  { id: 'notificacoes',  label: 'Notificações',    path: '/consultor/notificacoes', badge: true },
+];
+
+function Sidebar({ badgeCount }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { usuario, logout } = useApp();
 
   if (!usuario) return null;
+
+  const isAdmin = usuario.perfil === 'admin';
+  const menu = isAdmin ? menuAdmin : menuConsultor;
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const menuAdmin = [
-    { id: 'dashboard', label: 'Painel geral', path: '/admin/dashboard' },
-    { id: 'projetos', label: 'Projetos', path: '/admin/projetos' },
-    { id: 'kanban', label: 'Kanban', path: '/admin/kanban' },
-    { id: 'relatorios', label: 'Relatórios', path: '/admin/relatorios' },
-    { id: 'cobrancas', label: 'Cobranças', path: '/admin/cobrancas' },
-    { id: 'produtividade', label: 'Produtividade', path: '/admin/produtividade' },
-    { id: 'consultores', label: 'Consultores', path: '/admin/consultores' },
-    { id: 'acessos', label: 'Acessos', path: '/admin/acessos' }
-  ];
-
-  const menuConsultor = [
-    { id: 'dashboard', label: 'Meu painel', path: '/consultor/dashboard' },
-    { id: 'projetos', label: 'Meus projetos', path: '/consultor/projetos' },
-    { id: 'kanban', label: 'Kanban', path: '/consultor/kanban' },
-    { id: 'relatorios', label: 'Meus relatórios', path: '/consultor/relatorios' },
-    { id: 'notificacoes', label: 'Notificações', path: '/consultor/notificacoes' }
-  ];
-
-  const menu = usuario.perfil === 'admin' ? menuAdmin : menuConsultor;
-
   return (
-    <nav className="sidebar">
-      <div className="sidebar-header">
-        <div className="logo">
-          <div className="logo-icon">IP</div>
-          <div className="logo-text">
-            <div className="logo-name">Inovar Projetos</div>
-          </div>
-        </div>
+    <nav className={`sidebar ${isAdmin ? 'sidebar-admin' : 'sidebar-consultor'}`}>
+
+      {/* Logo */}
+      <div className="sb-logo">
+        <div className="sb-logo-icon">IP</div>
+        <span className="sb-logo-text">Inovar Projetos</span>
       </div>
 
-      <div className="sidebar-menu">
-        {menu.map(item => (
-          <button
-            key={item.id}
-            className="menu-item"
-            onClick={() => navigate(item.path)}
-          >
-            <span className="menu-icon">•</span>
-            <span className="menu-label">{item.label}</span>
-          </button>
-        ))}
+      {/* Itens de menu */}
+      <div className="sb-menu">
+        {menu.map((item) => {
+          if (item.sep) return <div key={item.id} className="sb-sep" />;
+
+          const ativo = location.pathname === item.path;
+
+          return (
+            <button
+              key={item.id}
+              className={`sb-item ${ativo ? 'ativo' : ''}`}
+              onClick={() => navigate(item.path)}
+            >
+              <span className="sb-dot" />
+              <span className="sb-label">{item.label}</span>
+              {item.badge && badgeCount > 0 && (
+                <span className="sb-badge">{badgeCount}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="sidebar-footer">
-        <button className="logout-btn" onClick={handleLogout}>
-          <span className="menu-icon">•</span>
-          <span>Sair</span>
+      {/* Sair */}
+      <div className="sb-footer">
+        <button className="sb-item" onClick={handleLogout}>
+          <span className="sb-dot" />
+          <span className="sb-label">Sair</span>
         </button>
       </div>
     </nav>
