@@ -1,15 +1,28 @@
-/* ── HEADER DO PROJETO ── */
-.projeto-header {
-  margin-bottom: 1rem;
-}
-
+/* ── BOTÃO VOLTAR ── */
 .back-btn {
-  display: inline-block;
-  margin-bottom: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 1rem;
   font-size: 13px;
+  font-weight: 700;
+  color: var(--navy2);
 }
 
-.projeto-header-row {
+.back-btn:hover {
+  text-decoration: underline;
+}
+
+/* ── HEADER NAVY DO PROJETO ── */
+.ph {
+  background: var(--navy);
+  border-radius: var(--r);
+  padding: 1.25rem 1.5rem;
+  color: #fff;
+  margin-bottom: 1.25rem;
+}
+
+.ph-top-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -17,36 +30,58 @@
   margin-bottom: 1rem;
 }
 
-.projeto-nome {
+.ph-tag {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-bottom: 3px;
+  text-transform: capitalize;
+}
+
+.ph-nome {
   font-size: 18px;
   font-weight: 700;
-  color: var(--tx);
   margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+  color: #fff;
 }
 
-.projeto-sub {
+.ph-sub {
   font-size: 13px;
-  color: var(--mx);
+  opacity: 0.75;
 }
 
-.projeto-header-actions {
+.ph-actions {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
 }
 
-.projeto-progress-row {
+.ph-prog {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.projeto-progress-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--mx);
-  min-width: 36px;
-  text-align: right;
+.ph-prog-bg {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ph-prog-f {
+  height: 100%;
+  background: #fff;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.ph-prog-l {
+  font-size: 13px;
+  opacity: 0.9;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 /* ── TABS ── */
@@ -137,6 +172,72 @@
 .accordion-icon {
   font-size: 10px;
   color: var(--hx);
+}
+
+/* ── SELETOR DE STATUS NO MODAL ── */
+.status-opts {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.status-opt {
+  flex: 1;
+  padding: 7px 4px;
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--rs);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--white);
+  text-align: center;
+  color: var(--hx);
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.status-opt:hover {
+  border-color: var(--bdr2);
+}
+
+.status-opt-ativo {
+  background: var(--green-lt);
+  color: var(--green);
+  border-color: var(--teal-bd);
+}
+
+/* ── ESTRELAS DE AVALIAÇÃO ── */
+.stars-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.star {
+  font-size: 22px;
+  cursor: pointer;
+  transition: color 0.1s;
+  user-select: none;
+}
+
+.star-on  { color: #fbbf24; }
+.star-off { color: #e2e8f0; }
+
+.star-label {
+  font-size: 12px;
+  color: var(--mx);
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+/* ── TAG DE SETOR NO MODAL ── */
+.rel-setor-tag {
+  background: rgba(255,255,255,0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-right: 6px;
 }
 
 /* ── LINHA DE ATIVIDADE ── */

@@ -164,7 +164,7 @@ function AdminDashboard() {
                       </span>
                     </td>
                     <td>
-                      <button className="btn-link" onClick={() => navigate('/admin/projetos')}>
+                      <button className="btn-link" onClick={() => navigate(`/admin/projetos/${projeto.id}`)}>
                         Ver →
                       </button>
                     </td>

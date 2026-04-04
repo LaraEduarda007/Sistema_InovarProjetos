@@ -33,8 +33,9 @@ function ProjetoDetalhePage() {
   const [atividadeSelecionada, setAtividadeSelecionada] = useState(null);
   const [salvandoRel, setSalvandoRel]         = useState(false);
   const [formRel, setFormRel] = useState({
-    oQueFoiRealizado: '', dificuldades: '', proximosPassos: ''
+    oQueFoiRealizado: '', dificuldades: '', proximosPassos: '', avaliacaoEquipe: 0, observacoes: ''
   });
+  const [statusSelecionado, setStatusSelecionado] = useState('concluido');
 
   useEffect(() => {
     carregarDados();
@@ -141,7 +142,8 @@ function ProjetoDetalhePage() {
 
   const abrirModalRel = (atividade) => {
     setAtividadeSelecionada(atividade);
-    setFormRel({ oQueFoiRealizado: '', dificuldades: '', proximosPassos: '' });
+    setFormRel({ oQueFoiRealizado: '', dificuldades: '', proximosPassos: '', avaliacaoEquipe: 0, observacoes: '' });
+    setStatusSelecionado('concluido');
     setShowModalRel(true);
   };
 
@@ -153,6 +155,10 @@ function ProjetoDetalhePage() {
         atividadeId: atividadeSelecionada.id,
         ...formRel
       });
+      // Atualiza status da atividade se não for "concluido"
+      if (statusSelecionado !== 'concluido') {
+        await atividadesService.atualizar(atividadeSelecionada.id, { status: statusSelecionado });
+      }
       setShowModalRel(false);
       carregarDados();
     } catch (err) {
@@ -208,39 +214,39 @@ function ProjetoDetalhePage() {
 
   return (
     <MainLayout>
-      {/* Header do projeto */}
-      <div className="projeto-header card">
-        <button className="btn-link back-btn" onClick={() => navigate(voltarUrl)}>
-          ← Voltar
-        </button>
+      {/* Botão voltar */}
+      <button className="btn-link back-btn" onClick={() => navigate(voltarUrl)}>
+        ← Voltar
+      </button>
 
-        <div className="projeto-header-row">
+      {/* Header navy do projeto */}
+      <div className="ph">
+        <div className="ph-top-row">
           <div>
-            <h2 className="projeto-nome">{projeto.nome}</h2>
-            <div className="projeto-sub">
-              Consultor: <strong>{consultorNome}</strong>
-              {' · '}Mês {mesAtual} de {projeto.duracao_meses}
+            <div className="ph-tag">Projeto {projeto.status === 'ativo' ? 'ativo' : 'pausado'}</div>
+            <h2 className="ph-nome">{projeto.nome}</h2>
+            <div className="ph-sub">
+              Consultor: {consultorNome} · Mês {mesAtual} de {projeto.duracao_meses}
             </div>
           </div>
-          <div className="projeto-header-actions">
+          <div className="ph-actions">
             {isAdmin && pendentes > 0 && (
               <button className="btn btn-warning btn-sm" onClick={cobrarPendencias}>
                 Cobrar pendências
               </button>
             )}
             {isAdmin && (
-              <button className="btn btn-primary btn-sm" onClick={() => setShowModalAtv(true)}>
+              <button className="btn btn-secondary btn-sm" onClick={() => setShowModalAtv(true)}>
                 + Nova atividade
               </button>
             )}
           </div>
         </div>
-
-        <div className="projeto-progress-row">
-          <div className="progress-wrap" style={{ flex: 1 }}>
-            <div className="progress-fill" style={{ width: `${progresso}%` }} />
+        <div className="ph-prog">
+          <div className="ph-prog-bg">
+            <div className="ph-prog-f" style={{ width: `${progresso}%` }} />
           </div>
-          <span className="projeto-progress-label">{progresso}%</span>
+          <span className="ph-prog-l">{progresso}% concluído</span>
         </div>
       </div>
 
@@ -470,48 +476,106 @@ function ProjetoDetalhePage() {
         <div className="modal-overlay" onClick={() => setShowModalRel(false)}>
           <div className="modal-box" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Registrar relatório</h3>
-              <div className="modal-sub">{atividadeSelecionada?.titulo}</div>
+              <h3>Registrar atividade</h3>
+              <div className="modal-sub">
+                <span className="rel-setor-tag">{atividadeSelecionada?.setor}</span>
+                {atividadeSelecionada?.titulo} — Mês {atividadeSelecionada?.mes}, Semana {atividadeSelecionada?.semana}
+              </div>
             </div>
             <div className="modal-body">
               <form onSubmit={handleRegistrarRelatorio}>
+
+                {/* Seletor de status */}
+                <div className="form-group">
+                  <label className="form-label">Status</label>
+                  <div className="status-opts">
+                    {[
+                      { value: 'a-fazer',       label: 'A fazer' },
+                      { value: 'em-andamento',  label: 'Em andamento' },
+                      { value: 'concluido',     label: 'Concluído' },
+                      { value: 'nao-realizado', label: 'Não realizado' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`status-opt ${statusSelecionado === opt.value ? 'status-opt-ativo' : ''}`}
+                        onClick={() => setStatusSelecionado(opt.value)}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="form-group">
                   <label className="form-label">O que foi realizado *</label>
                   <textarea
                     className="inp"
                     rows="3"
-                    placeholder="Descreva o que foi realizado..."
+                    placeholder="Descreva as ações realizadas nesta visita..."
                     value={formRel.oQueFoiRealizado}
                     onChange={e => setFormRel({ ...formRel, oQueFoiRealizado: e.target.value })}
                     required
                   />
                 </div>
+
                 <div className="form-group">
                   <label className="form-label">Dificuldades encontradas</label>
                   <textarea
                     className="inp"
                     rows="2"
-                    placeholder="Descreva dificuldades (opcional)..."
+                    placeholder="Obstáculos ou dificuldades..."
                     value={formRel.dificuldades}
                     onChange={e => setFormRel({ ...formRel, dificuldades: e.target.value })}
                   />
                 </div>
+
                 <div className="form-group">
-                  <label className="form-label">Próximos passos</label>
+                  <label className="form-label">Próximos passos *</label>
                   <textarea
                     className="inp"
                     rows="2"
-                    placeholder="O que será feito a seguir (opcional)..."
+                    placeholder="O que fazer na próxima visita..."
                     value={formRel.proximosPassos}
                     onChange={e => setFormRel({ ...formRel, proximosPassos: e.target.value })}
+                    required
                   />
                 </div>
+
+                {/* Avaliação com estrelas */}
+                <div className="form-group">
+                  <label className="form-label">Avaliação da equipe</label>
+                  <div className="stars-row">
+                    {[1,2,3,4,5].map(n => (
+                      <span
+                        key={n}
+                        className={`star ${n <= formRel.avaliacaoEquipe ? 'star-on' : 'star-off'}`}
+                        onClick={() => setFormRel({ ...formRel, avaliacaoEquipe: n })}
+                      >★</span>
+                    ))}
+                    {formRel.avaliacaoEquipe > 0 && (
+                      <span className="star-label">{formRel.avaliacaoEquipe}/5</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Observações</label>
+                  <textarea
+                    className="inp"
+                    rows="2"
+                    placeholder="Informações adicionais (opcional)..."
+                    value={formRel.observacoes}
+                    onChange={e => setFormRel({ ...formRel, observacoes: e.target.value })}
+                  />
+                </div>
+
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowModalRel(false)}>
                     Cancelar
                   </button>
                   <button type="submit" className="btn btn-primary" disabled={salvandoRel}>
-                    {salvandoRel ? 'Enviando...' : 'Enviar relatório'}
+                    {salvandoRel ? 'Salvando...' : 'Salvar relatório'}
                   </button>
                 </div>
               </form>

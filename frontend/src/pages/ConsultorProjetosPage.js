@@ -5,9 +5,10 @@ import Topbar from '../components/Topbar';
 import { projetosService, atividadesService } from '../services/api';
 
 function ConsultorProjetosPage() {
-  const [projetos, setProjetos] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [erro, setErro]         = useState(null);
+  const [projetos, setProjetos]         = useState([]);
+  const [pendenciasPorProjeto, setPendencias] = useState({});
+  const [loading, setLoading]           = useState(true);
+  const [erro, setErro]                 = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,8 +19,25 @@ function ConsultorProjetosPage() {
     try {
       setLoading(true);
       setErro(null);
-      const response = await projetosService.listar();
-      setProjetos(response.projetos || []);
+
+      const [projetosRes, atividadesRes] = await Promise.all([
+        projetosService.listar(),
+        atividadesService.listar() // backend filtra pelo consultor logado
+      ]);
+
+      const projetosData   = projetosRes.projetos || [];
+      const atividadesData = atividadesRes.atividades || [];
+
+      // Conta pendências por projeto
+      const pendencias = {};
+      atividadesData.forEach(atv => {
+        if (!atv.relatorio_id && (atv.status === 'a-fazer' || atv.status === 'em-andamento')) {
+          pendencias[atv.projeto_id] = (pendencias[atv.projeto_id] || 0) + 1;
+        }
+      });
+
+      setProjetos(projetosData);
+      setPendencias(pendencias);
     } catch (err) {
       setErro('Erro ao carregar projetos.');
     } finally {
@@ -31,20 +49,25 @@ function ConsultorProjetosPage() {
     if (!projeto.data_inicio) return 0;
     const inicio = new Date(projeto.data_inicio);
     const hoje = new Date();
-    const mesesDecorridos = (hoje.getFullYear() - inicio.getFullYear()) * 12 + (hoje.getMonth() - inicio.getMonth());
-    const pct = Math.round((mesesDecorridos / projeto.duracao_meses) * 100);
-    return Math.min(Math.max(pct, 0), 100);
+    const meses = (hoje.getFullYear() - inicio.getFullYear()) * 12 + (hoje.getMonth() - inicio.getMonth());
+    return Math.min(Math.max(Math.round((meses / projeto.duracao_meses) * 100), 0), 100);
+  };
+
+  const calcularMesAtual = (projeto) => {
+    if (!projeto.data_inicio) return '—';
+    const inicio = new Date(projeto.data_inicio);
+    const hoje = new Date();
+    const mes = (hoje.getFullYear() - inicio.getFullYear()) * 12 + (hoje.getMonth() - inicio.getMonth()) + 1;
+    return `Mês ${Math.min(mes, projeto.duracao_meses)}`;
   };
 
   return (
     <MainLayout>
-      <Topbar title="Meus Projetos" subtitle="Projetos atribuídos a você" />
+      <Topbar title="Meus projetos" subtitle="Projetos atribuídos a você" />
 
       {erro && <div className="alert alert-error">{erro}</div>}
 
       <div className="card">
-        <div className="card-title">Lista de projetos</div>
-
         {loading ? (
           <p className="empty-state">Carregando...</p>
         ) : projetos.length === 0 ? (
@@ -54,20 +77,23 @@ function ConsultorProjetosPage() {
             <thead>
               <tr>
                 <th>Cliente</th>
-                <th>Duração</th>
+                <th>Mês atual</th>
                 <th>Progresso</th>
-                <th>Status</th>
-                <th>Ações</th>
+                <th>Pendências</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {projetos.map((projeto) => {
-                const pct = calcularProgresso(projeto);
+                const pct       = calcularProgresso(projeto);
+                const mesAtual  = calcularMesAtual(projeto);
+                const qtdPend   = pendenciasPorProjeto[projeto.id] || 0;
+
                 return (
                   <tr key={projeto.id}>
                     <td><strong>{projeto.nome}</strong></td>
-                    <td style={{ color: 'var(--mx)' }}>{projeto.duracao_meses} meses</td>
-                    <td style={{ minWidth: 120 }}>
+                    <td style={{ color: 'var(--mx)' }}>{mesAtual}</td>
+                    <td style={{ minWidth: 130 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div className="progress-wrap" style={{ flex: 1 }}>
                           <div className="progress-fill" style={{ width: `${pct}%` }} />
@@ -76,9 +102,11 @@ function ConsultorProjetosPage() {
                       </div>
                     </td>
                     <td>
-                      <span className={`badge ${projeto.status === 'ativo' ? 'badge-success' : 'badge-neutral'}`}>
-                        {projeto.status === 'ativo' ? 'Ativo' : 'Pausado'}
-                      </span>
+                      {qtdPend > 0 ? (
+                        <span className="badge badge-warning">{qtdPend} pendente{qtdPend > 1 ? 's' : ''}</span>
+                      ) : (
+                        <span className="badge badge-success">Em dia</span>
+                      )}
                     </td>
                     <td>
                       <button
