@@ -1,187 +1,236 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../components/MainLayout';
 import Topbar from '../components/Topbar';
-import { cobrancasService } from '../services/api';
+import { cobrancasService, usuariosService } from '../services/api';
 import './CobrancasPage.css';
 
-const CONSULTORES = [
-  { id: 'consultor-001', nome: 'Ana Lima', especialidade: 'RH e Processos' },
-  { id: 'consultor-002', nome: 'Carlos Mota', especialidade: 'Financeiro' },
-  { id: 'consultor-003', nome: 'Priya Souza', especialidade: 'Operações' }
-];
-
 function CobrancasPage() {
-  const [cobrancas, setCobrancas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [cobrancas, setCobrancas]     = useState([]);
+  const [consultores, setConsultores] = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [erro, setErro]               = useState(null);
+  const [showModal, setShowModal]     = useState(false);
+  const [salvando, setSalvando]       = useState(false);
+
   const [formData, setFormData] = useState({
-    consultor_id: 'consultor-001',
-    mensagem: '',
+    consultorId: '',
     prazo: '',
-    urgencia: 'normal'
+    urgencia: 'normal',
+    mensagem: ''
   });
 
   useEffect(() => {
-    carregarCobrancas();
+    carregarDados();
   }, []);
 
-  const carregarCobrancas = async () => {
+  const carregarDados = async () => {
     try {
       setLoading(true);
-      const response = await cobrancasService.listar();
-      const cobrancasData = response.cobrancas || [];
-      setCobrancas(cobrancasData);
-    } catch (error) {
-      console.error('Erro ao carregar cobranças:', error);
+      setErro(null);
+
+      const [cobRes, consRes] = await Promise.all([
+        cobrancasService.listar(),
+        usuariosService.listarConsultores()
+      ]);
+
+      setCobrancas(cobRes.cobrancas || []);
+      const lista = consRes.consultores || [];
+      setConsultores(lista);
+
+      if (lista.length > 0) {
+        setFormData(f => ({ ...f, consultorId: lista[0].id }));
+      }
+    } catch (err) {
+      setErro('Erro ao carregar dados.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleEnviar = async (e) => {
     e.preventDefault();
     try {
-      // Validar campos obrigatórios
-      if (!formData.consultor_id || !formData.prazo) {
-        alert('Preencha consultor e prazo');
-        return;
-      }
-      
-      const payload = {
-  consultorId: formData.consultor_id,
-  mensagem: formData.mensagem,
-  prazo: formData.prazo,
-  urgencia: formData.urgencia
-};
-      
-      console.log('Enviando cobrança:', payload);
-      await cobrancasService.criar(payload);
-      setFormData({ consultor_id: 'consultor-001', mensagem: '', prazo: '', urgencia: 'normal' });
-      setShowForm(false);
-      carregarCobrancas();
-      alert('Cobrança criada com sucesso!');
-    } catch (error) {
-      console.error('Erro ao criar cobrança:', error.response?.data || error);
-      alert('Erro ao criar cobrança: ' + error.message);
+      setSalvando(true);
+      await cobrancasService.criar(formData);
+      setShowModal(false);
+      setFormData({ consultorId: consultores[0]?.id || '', prazo: '', urgencia: 'normal', mensagem: '' });
+      carregarDados();
+    } catch (err) {
+      setErro('Erro ao enviar cobrança.');
+    } finally {
+      setSalvando(false);
     }
   };
 
-  const getNomeConsultor = (consultorId) => {
-    const consultor = CONSULTORES.find(c => c.id === consultorId);
-    return consultor ? consultor.nome : consultorId;
+  // Busca o nome do consultor pelo id
+  const getNomeConsultor = (id) => {
+    const c = consultores.find(c => c.id === id);
+    return c ? c.nome : id;
+  };
+
+  const statusBadge = (status) => {
+    if (status === 'aberta')    return <span className="badge badge-warning">Aberta</span>;
+    if (status === 'resolvida') return <span className="badge badge-success">Resolvida</span>;
+    return <span className="badge badge-neutral">{status}</span>;
+  };
+
+  const urgenciaBadge = (urgencia) => {
+    if (urgencia === 'urgente') return <span className="badge badge-danger">Urgente</span>;
+    return <span className="badge badge-neutral">Normal</span>;
+  };
+
+  const formatarData = (data) => {
+    if (!data) return '—';
+    return new Date(data).toLocaleDateString('pt-BR');
   };
 
   return (
     <MainLayout>
-      <Topbar 
-        title="Cobranças" 
-        subtitle="Acompanhe atividades pendentes"
-      />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+        <Topbar title="Cobranças" subtitle="Gerencie atividades pendentes dos consultores" semUsuario />
+        <button className="btn btn-warning" onClick={() => setShowModal(true)}>
+          + Nova cobrança
+        </button>
+      </div>
 
-      <div className="page-content">
-        <div className="page-header">
-          <button 
-            className="btn btn-primary"
-            onClick={() => setShowForm(!showForm)}
-          >
-            Nova cobrança
-          </button>
+      {erro && <div className="alert alert-error">{erro}</div>}
+
+      {/* Métricas rápidas */}
+      <div className="metrics-grid cols-3" style={{ marginBottom: '1.25rem' }}>
+        <div className="metric-card">
+          <div className="metric-label">Total de cobranças</div>
+          <div className="metric-value">{cobrancas.length}</div>
         </div>
-
-        {showForm && (
-          <div className="card" style={{ marginBottom: '20px' }}>
-            <h3 className="card-title">Criar nova cobrança</h3>
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '10px' }}>
-                <label>Consultor *</label>
-                <select
-                  value={formData.consultor_id}
-                  onChange={(e) => setFormData({ ...formData, consultor_id: e.target.value })}
-                  required
-                >
-                  {CONSULTORES.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.nome} - {c.especialidade}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div style={{ marginBottom: '10px' }}>
-                <label>Mensagem</label>
-                <textarea
-                  value={formData.mensagem}
-                  onChange={(e) => setFormData({ ...formData, mensagem: e.target.value })}
-                  placeholder="Mensagem da cobrança"
-                  rows="3"
-                />
-              </div>
-              <div style={{ marginBottom: '10px' }}>
-                <label>Prazo *</label>
-                <input
-                  type="date"
-                  value={formData.prazo}
-                  onChange={(e) => setFormData({ ...formData, prazo: e.target.value })}
-                  required
-                />
-              </div>
-              <div style={{ marginBottom: '10px' }}>
-                <label>Urgência</label>
-                <select
-                  value={formData.urgencia}
-                  onChange={(e) => setFormData({ ...formData, urgencia: e.target.value })}
-                >
-                  <option value="normal">Normal</option>
-                  <option value="urgente">Urgente</option>
-                </select>
-              </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button type="submit" className="btn btn-primary">Criar cobrança</button>
-                <button 
-                  type="button" 
-                  className="btn btn-secondary"
-                  onClick={() => setShowForm(false)}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
+        <div className="metric-card">
+          <div className="metric-label">Em aberto</div>
+          <div className={`metric-value ${cobrancas.filter(c => c.status === 'aberta').length > 0 ? 'warn' : ''}`}>
+            {cobrancas.filter(c => c.status === 'aberta').length}
           </div>
-        )}
-
-        <div className="card">
-          <h3 className="card-title">Cobranças pendentes</h3>
-          {loading ? (
-            <p style={{ textAlign: 'center', color: '#999' }}>Carregando...</p>
-          ) : cobrancas.length > 0 ? (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Consultor</th>
-                  <th>Prazo</th>
-                  <th>Urgência</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cobrancas.map((cobranca) => (
-                  <tr key={cobranca.id}>
-                    <td>{getNomeConsultor(cobranca.consultor_id)}</td>
-                    <td>{cobranca.prazo}</td>
-                    <td>{cobranca.urgencia}</td>
-                    <td>
-                      <span className={`badge ${cobranca.status === 'aberta' ? 'badge-warning' : 'badge-success'}`}>
-                        {cobranca.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p style={{ textAlign: 'center', color: '#999' }}>Nenhuma cobrança</p>
-          )}
+        </div>
+        <div className="metric-card">
+          <div className="metric-label">Resolvidas</div>
+          <div className="metric-value good">
+            {cobrancas.filter(c => c.status === 'resolvida').length}
+          </div>
         </div>
       </div>
+
+      {/* Tabela */}
+      <div className="card">
+        <div className="card-title">Lista de cobranças</div>
+
+        {loading ? (
+          <p className="empty-state">Carregando...</p>
+        ) : cobrancas.length === 0 ? (
+          <p className="empty-state">Nenhuma cobrança registrada.</p>
+        ) : (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Consultor</th>
+                <th>Prazo</th>
+                <th>Urgência</th>
+                <th>Status</th>
+                <th>Enviada em</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cobrancas.map((cob) => (
+                <tr key={cob.id}>
+                  <td><strong>{getNomeConsultor(cob.consultor_id)}</strong></td>
+                  <td style={{ color: 'var(--mx)' }}>{formatarData(cob.prazo)}</td>
+                  <td>{urgenciaBadge(cob.urgencia)}</td>
+                  <td>{statusBadge(cob.status)}</td>
+                  <td style={{ color: 'var(--mx)' }}>{formatarData(cob.enviada_em)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Modal nova cobrança */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
+
+            <div className="modal-header warn">
+              <h3>Enviar cobrança</h3>
+              <div className="modal-sub">O consultor receberá uma notificação no sistema</div>
+            </div>
+
+            <div className="modal-body">
+              <div className="alert alert-warning" style={{ marginBottom: '1rem' }}>
+                Selecione o consultor e informe o prazo para regularização.
+              </div>
+
+              <form onSubmit={handleEnviar}>
+                <div className="form-group">
+                  <label className="form-label">Consultor *</label>
+                  <select
+                    className="inp"
+                    value={formData.consultorId}
+                    onChange={e => setFormData({ ...formData, consultorId: e.target.value })}
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    {consultores.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.nome}{c.especialidade ? ` — ${c.especialidade}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-row cols-2">
+                  <div className="form-group">
+                    <label className="form-label">Prazo para envio *</label>
+                    <input
+                      className="inp"
+                      type="date"
+                      value={formData.prazo}
+                      onChange={e => setFormData({ ...formData, prazo: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Urgência</label>
+                    <select
+                      className="inp"
+                      value={formData.urgencia}
+                      onChange={e => setFormData({ ...formData, urgencia: e.target.value })}
+                    >
+                      <option value="normal">Normal</option>
+                      <option value="urgente">Urgente</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Mensagem (opcional)</label>
+                  <textarea
+                    className="inp"
+                    rows="3"
+                    placeholder="Ex: Por favor regularize os relatórios até a data acima..."
+                    value={formData.mensagem}
+                    onChange={e => setFormData({ ...formData, mensagem: e.target.value })}
+                  />
+                </div>
+
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-warning" disabled={salvando}>
+                    {salvando ? 'Enviando...' : 'Enviar cobrança'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }

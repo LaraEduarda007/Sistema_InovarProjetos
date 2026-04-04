@@ -6,7 +6,8 @@ import './NotificacoesPage.css';
 
 function NotificacoesPage() {
   const [notificacoes, setNotificacoes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]           = useState(true);
+  const [erro, setErro]                 = useState(null);
 
   useEffect(() => {
     carregarNotificacoes();
@@ -15,11 +16,11 @@ function NotificacoesPage() {
   const carregarNotificacoes = async () => {
     try {
       setLoading(true);
+      setErro(null);
       const response = await notificacoesService.listar();
-      const notificacoesData = response.notificacoes || [];
-      setNotificacoes(notificacoesData);
+      setNotificacoes(response.notificacoes || []);
     } catch (error) {
-      console.error('Erro ao carregar notificações:', error);
+      setErro('Erro ao carregar notificações.');
     } finally {
       setLoading(false);
     }
@@ -30,55 +31,78 @@ function NotificacoesPage() {
       await notificacoesService.marcarComoLida(id);
       carregarNotificacoes();
     } catch (error) {
-      console.error('Erro ao marcar como lida:', error);
+      setErro('Erro ao marcar notificação.');
     }
   };
 
+  const marcarTodasComoLidas = async () => {
+    try {
+      await notificacoesService.marcarTodasComoLidas();
+      carregarNotificacoes();
+    } catch (error) {
+      setErro('Erro ao marcar todas como lidas.');
+    }
+  };
+
+  const formatarData = (data) => {
+    if (!data) return '';
+    return new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  // Cor do dot por tipo de notificação
+  const dotCor = (tipo) => {
+    if (tipo === 'cobranca') return '#f59e0b';
+    if (tipo === 'relatorio') return 'var(--green2)';
+    return 'var(--navy2)';
+  };
+
+  const naoLidas = notificacoes.filter(n => !n.lida).length;
+
   return (
     <MainLayout>
-      <Topbar 
-        title="Notificações" 
-        subtitle="Seu centro de mensagens"
-      />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+        <Topbar title="Notificações" subtitle="Suas mensagens e alertas do sistema" semUsuario />
+        {naoLidas > 0 && (
+          <button className="btn btn-secondary btn-sm" onClick={marcarTodasComoLidas}>
+            Marcar todas como lidas
+          </button>
+        )}
+      </div>
 
-      <div className="page-content">
-        <div className="card">
-          <h3 className="card-title">Notificações</h3>
-          {loading ? (
-            <p style={{ textAlign: 'center', color: '#999' }}>Carregando...</p>
-          ) : notificacoes.length > 0 ? (
-            <div>
-              {notificacoes.map((notif) => (
-                <div key={notif.id} style={{
-                  padding: '12px',
-                  borderBottom: '1px solid #eee',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 'bold' }}>{notif.titulo}</div>
-                    <div style={{ fontSize: '13px', color: '#666' }}>{notif.mensagem}</div>
-                    <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
-                      {new Date(notif.criada_em).toLocaleDateString('pt-BR')}
-                    </div>
-                  </div>
-                  {!notif.lida && (
-                    <button
-                      className="btn btn-primary"
-                      style={{ marginLeft: '10px' }}
-                      onClick={() => marcarComoLida(notif.id)}
-                    >
-                      Marcar como lida
-                    </button>
-                  )}
+      {erro && <div className="alert alert-error">{erro}</div>}
+
+      <div className="card">
+        {loading ? (
+          <p className="empty-state">Carregando...</p>
+        ) : notificacoes.length === 0 ? (
+          <p className="empty-state">Nenhuma notificação.</p>
+        ) : (
+          <div>
+            {notificacoes.map((notif) => (
+              <div key={notif.id} className={`notif-item ${!notif.lida ? 'nao-lida' : ''}`}>
+                {/* Dot colorido */}
+                <div className="notif-dot" style={{ background: dotCor(notif.tipo) }} />
+
+                {/* Conteúdo */}
+                <div className="notif-conteudo">
+                  <div className="notif-titulo">{notif.titulo}</div>
+                  <div className="notif-mensagem">{notif.mensagem}</div>
+                  <div className="notif-data">{formatarData(notif.data_criacao)}</div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p style={{ textAlign: 'center', color: '#999' }}>Nenhuma notificação</p>
-          )}
-        </div>
+
+                {/* Ação */}
+                {!notif.lida && (
+                  <button
+                    className="btn btn-secondary btn-xs"
+                    onClick={() => marcarComoLida(notif.id)}
+                  >
+                    Marcar como lida
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </MainLayout>
   );

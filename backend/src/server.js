@@ -10,6 +10,7 @@ import atividadesRoutes from './routes/atividades.js';
 import relatoriosRoutes from './routes/relatorios.js';
 import cobrancasRoutes from './routes/cobrancas.js';
 import notificacoesRoutes from './routes/notificacoes.js';
+import usuariosRoutes from './routes/usuarios.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,6 +32,7 @@ app.use('/api/atividades', atividadesRoutes);
 app.use('/api/relatorios', relatoriosRoutes);
 app.use('/api/cobrancas', cobrancasRoutes);
 app.use('/api/notificacoes', notificacoesRoutes);
+app.use('/api/usuarios', usuariosRoutes);
 
 // Tratamento de erros 404
 app.use((req, res) => {

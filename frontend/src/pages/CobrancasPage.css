@@ -1,1 +1,5 @@
-@import './PagesStyles.css';
+/* CobrancasPage — usa as classes globais do App.css */
+textarea.inp {
+  resize: vertical;
+  min-height: 80px;
+}

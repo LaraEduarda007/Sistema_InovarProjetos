@@ -180,4 +180,12 @@ export const notificacoesService = {
   }
 };
 
+// Usuários / Consultores
+export const usuariosService = {
+  listarConsultores: async () => {
+    const response = await api.get('/usuarios/consultores');
+    return response.data;
+  }
+};
+
 export default api;

@@ -1,0 +1,180 @@
+/* ── HEADER DO PROJETO ── */
+.projeto-header {
+  margin-bottom: 1rem;
+}
+
+.back-btn {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  font-size: 13px;
+}
+
+.projeto-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.projeto-nome {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--tx);
+  margin: 0 0 4px 0;
+}
+
+.projeto-sub {
+  font-size: 13px;
+  color: var(--mx);
+}
+
+.projeto-header-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.projeto-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.projeto-progress-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mx);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ── TABS ── */
+.tabs-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--bdr);
+  margin-top: 1.25rem;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mx);
+  cursor: pointer;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tab-btn.ativo {
+  color: var(--navy);
+  border-bottom-color: var(--navy);
+}
+
+/* ── ACCORDION ── */
+.accordion-mes {
+  border-bottom: 1px solid var(--bdr);
+}
+
+.accordion-mes:last-child {
+  border-bottom: none;
+}
+
+.accordion-mes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tx);
+  user-select: none;
+}
+
+.accordion-mes-header:hover {
+  color: var(--navy);
+}
+
+.accordion-mes-body {
+  padding-bottom: 8px;
+}
+
+.accordion-semana {
+  margin-left: 12px;
+  border-left: 2px solid var(--bdr);
+  margin-bottom: 4px;
+}
+
+.accordion-semana-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mx);
+  user-select: none;
+}
+
+.accordion-semana-header:hover {
+  color: var(--navy);
+  background: var(--bg);
+}
+
+.accordion-semana-body {
+  padding: 0 4px 4px 12px;
+}
+
+.accordion-icon {
+  font-size: 10px;
+  color: var(--hx);
+}
+
+/* ── LINHA DE ATIVIDADE ── */
+.atividade-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px;
+  border-radius: 6px;
+  margin-bottom: 2px;
+  transition: background 0.1s;
+}
+
+.atividade-row:hover {
+  background: var(--bg);
+}
+
+.atividade-setor {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--navy);
+  background: rgba(0, 43, 91, 0.08);
+  padding: 2px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.atividade-titulo {
+  flex: 1;
+  font-size: 13px;
+  color: var(--tx);
+  min-width: 0;
+}
+
+.atividade-acoes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}

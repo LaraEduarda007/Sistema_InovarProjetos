@@ -4,10 +4,18 @@ import Topbar from '../components/Topbar';
 import { atividadesService } from '../services/api';
 import './KanbanPage.css';
 
+// Colunas do Kanban conforme o protótipo
+const COLUNAS = [
+  { status: 'a-fazer',       label: 'A fazer',       cor: 'var(--navy2)' },
+  { status: 'em-andamento',  label: 'Em andamento',  cor: '#d97706' },
+  { status: 'concluido',     label: 'Concluído',     cor: 'var(--green2)' },
+  { status: 'nao-realizado', label: 'Não realizado', cor: 'var(--red)' },
+];
+
 function KanbanPage() {
   const [atividades, setAtividades] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filtroStatus, setFiltroStatus] = useState('todas');
+  const [loading, setLoading]       = useState(true);
+  const [erro, setErro]             = useState(null);
 
   useEffect(() => {
     carregarAtividades();
@@ -16,84 +24,65 @@ function KanbanPage() {
   const carregarAtividades = async () => {
     try {
       setLoading(true);
+      setErro(null);
       const response = await atividadesService.listar();
-      const atividadesData = response.atividades || [];
-      setAtividades(atividadesData);
+      setAtividades(response.atividades || []);
     } catch (error) {
-      console.error('Erro ao carregar atividades:', error);
+      setErro('Erro ao carregar atividades.');
     } finally {
       setLoading(false);
     }
   };
 
-  const getAtividadesPorStatus = (status) => {
-    if (filtroStatus === 'todas') {
-      return atividades.filter(a => a.status === status);
-    }
-    return atividades.filter(a => a.status === status);
-  };
-
-  const statuses = [
-    { valor: 'a-fazer', label: 'A fazer', cor: '#1d4ed8' },
-    { valor: 'em-andamento', label: 'Em andamento', cor: '#b45309' },
-    { valor: 'concluido', label: 'Concluído', cor: '#059669' },
-    { valor: 'nao-realizado', label: 'Não realizado', cor: '#991b1b' }
-  ];
+  const getAtvPorStatus = (status) =>
+    atividades.filter(a => a.status === status);
 
   return (
     <MainLayout>
-      <Topbar 
-        title="Kanban" 
-        subtitle="Visualize o status de todas as atividades"
-      />
+      <Topbar title="Kanban" subtitle="Acompanhe o status de todas as atividades" />
 
-      <div className="page-content">
-        {loading ? (
-          <p style={{ textAlign: 'center', color: '#999' }}>Carregando...</p>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' }}>
-            {statuses.map((status) => (
-              <div key={status.valor} style={{
-                background: '#f8fafc',
-                borderRadius: '8px',
-                padding: '12px',
-                minHeight: '400px'
-              }}>
-                <div style={{
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  color: status.cor,
-                  marginBottom: '10px'
-                }}>
-                  {status.label} ({getAtividadesPorStatus(status.valor).length})
+      {erro && <div className="alert alert-error">{erro}</div>}
+
+      {loading ? (
+        <p className="empty-state">Carregando...</p>
+      ) : (
+        <div className="kanban-board">
+          {COLUNAS.map((col) => {
+            const cards = getAtvPorStatus(col.status);
+            return (
+              <div key={col.status} className="kanban-col">
+
+                {/* Cabeçalho da coluna */}
+                <div className="kanban-col-header">
+                  <span className="kanban-col-title" style={{ color: col.cor }}>
+                    {col.label}
+                  </span>
+                  <span className="kanban-col-count">{cards.length}</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {getAtividadesPorStatus(status.valor).map((atividade) => (
-                    <div key={atividade.id} style={{
-                      background: '#fff',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '6px',
-                      padding: '10px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }} 
-                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#1a3f6f'}
-                    onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
-                    >
-                      <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>
-                        {atividade.titulo}
+
+                {/* Cards */}
+                <div className="kanban-cards">
+                  {cards.length === 0 ? (
+                    <p className="kanban-empty">Nenhuma atividade</p>
+                  ) : (
+                    cards.map((atv) => (
+                      <div key={atv.id} className="kanban-card">
+                        <span className="kanban-tag">{atv.setor || '—'}</span>
+                        <div className="kanban-card-title">{atv.titulo}</div>
+                        <div className="kanban-card-meta">
+                          <span>Mês {atv.mes} · S{atv.semana}</span>
+                          {atv.consultor_nome && <span>{atv.consultor_nome}</span>}
+                        </div>
                       </div>
-                      <div style={{ fontSize: '11px', color: '#666' }}>
-                        {atividade.setor} · Mês {atividade.mes} S{atividade.semana}
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
+
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </MainLayout>
   );
 }

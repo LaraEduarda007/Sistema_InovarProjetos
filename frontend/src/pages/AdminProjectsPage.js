@@ -1,41 +1,49 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import MainLayout from '../components/MainLayout';
 import Topbar from '../components/Topbar';
-import { projetosService } from '../services/api';
-import './ProjectsPage.css';
-
-const CONSULTORES = [
-  { id: 'consultor-001', nome: 'Ana Lima', especialidade: 'RH e Processos' },
-  { id: 'consultor-002', nome: 'Carlos Mota', especialidade: 'Financeiro' },
-  { id: 'consultor-003', nome: 'Priya Souza', especialidade: 'Operações' }
-];
+import { projetosService, usuariosService } from '../services/api';
 
 function AdminProjectsPage() {
-  const [projetos, setProjetos] = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
+  const [projetos, setProjetos]         = useState([]);
+  const [consultores, setConsultores]   = useState([]);
+  const [carregando, setCarregando]     = useState(true);
+  const [erro, setErro]                 = useState(null);
+  const [showModal, setShowModal]       = useState(false);
+  const [salvando, setSalvando]         = useState(false);
 
-  const [formData, setFormData] = useState({ 
-    nome: '', 
-    data_inicio: '', 
+  const [formData, setFormData] = useState({
+    nome: '',
+    data_inicio: '',
     duracao_meses: 12,
-    consultor_id: 'consultor-001'
+    consultor_id: ''
   });
 
   useEffect(() => {
-    carregarProjetos();
+    carregarDados();
   }, []);
 
-  const carregarProjetos = async () => {
+  const carregarDados = async () => {
     try {
       setCarregando(true);
-      const response = await projetosService.listar();
-      setProjetos(response.projetos || []);
       setErro(null);
+
+      const [projetosRes, consultoresRes] = await Promise.all([
+        projetosService.listar(),
+        usuariosService.listarConsultores()
+      ]);
+
+      setProjetos(projetosRes.projetos || []);
+      const lista = consultoresRes.consultores || [];
+      setConsultores(lista);
+
+      // Pré-seleciona o primeiro consultor
+      if (lista.length > 0) {
+        setFormData(f => ({ ...f, consultor_id: lista[0].id }));
+      }
     } catch (err) {
-      setErro('Erro ao carregar projetos');
-      console.error(err);
+      setErro('Erro ao carregar dados. Verifique se o servidor está rodando.');
     } finally {
       setCarregando(false);
     }
@@ -44,207 +52,172 @@ function AdminProjectsPage() {
   const handleCriar = async (e) => {
     e.preventDefault();
     try {
+      setSalvando(true);
       await projetosService.criar(formData);
-      setFormData({ 
-        nome: '', 
-        data_inicio: '', 
-        duracao_meses: 12, 
-        consultor_id: 'consultor-001' 
-      });
       setShowModal(false);
-      carregarProjetos();
+      setFormData({ nome: '', data_inicio: '', duracao_meses: 12, consultor_id: consultores[0]?.id || '' });
+      carregarDados();
     } catch (err) {
-      setErro('Erro ao criar projeto');
-      console.error(err);
+      setErro('Erro ao criar projeto.');
+    } finally {
+      setSalvando(false);
     }
   };
 
   const handleDeletar = async (id) => {
-    if (window.confirm('Tem certeza que deseja deletar este projeto?')) {
-      try {
-        await projetosService.deletar(id);
-        carregarProjetos();
-      } catch (err) {
-        setErro('Erro ao deletar projeto');
-      }
+    if (!window.confirm('Tem certeza que deseja deletar este projeto?')) return;
+    try {
+      await projetosService.deletar(id);
+      carregarDados();
+    } catch (err) {
+      setErro('Erro ao deletar projeto.');
     }
   };
 
-  const getNomeConsultor = (consultorId) => {
-    const consultor = CONSULTORES.find(c => c.id === consultorId);
-    return consultor ? consultor.nome : 'N/A';
-  };
-
-  if (carregando) {
-    return (
-      <MainLayout>
-        <Topbar title="Projetos" />
-        <div className="loading">Carregando...</div>
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout>
-      <Topbar 
-        title="Projetos" 
-        subtitle="Gestão de todos os projetos"
-      />
+      {/* Topbar com botão */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+        <Topbar title="Projetos" subtitle="Gerencie todos os projetos" semUsuario />
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+          + Novo projeto
+        </button>
+      </div>
 
       {erro && <div className="alert alert-error">{erro}</div>}
 
-      <div className="page-content">
-        <div className="page-header">
-          <button 
-            className="btn btn-primary" 
-            onClick={() => setShowModal(true)}
-          >
-            + Novo projeto
-          </button>
-        </div>
+      {/* Tabela de projetos */}
+      <div className="card">
+        <div className="card-title">Lista de projetos</div>
 
-        <div className="card">
-          <h3 className="card-title">Lista de projetos</h3>
-
-          {projetos.length === 0 ? (
-            <p className="empty-state">Nenhum projeto cadastrado</p>
-          ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Cliente</th>
-                  <th>Consultor</th>
-                  <th>Mês</th>
-                  <th>Status</th>
-                  <th>Ações</th>
+        {carregando ? (
+          <p className="empty-state">Carregando...</p>
+        ) : projetos.length === 0 ? (
+          <p className="empty-state">Nenhum projeto cadastrado ainda.</p>
+        ) : (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Consultor</th>
+                <th>Duração</th>
+                <th>Status</th>
+                <th>Ações</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {projetos.map((projeto) => (
+                <tr key={projeto.id}>
+                  <td><strong>{projeto.nome}</strong></td>
+                  <td style={{ color: 'var(--mx)' }}>{projeto.consultor_nome || '—'}</td>
+                  <td style={{ color: 'var(--mx)' }}>{projeto.duracao_meses} meses</td>
+                  <td>
+                    <span className={`badge ${projeto.status === 'ativo' ? 'badge-success' : 'badge-neutral'}`}>
+                      {projeto.status === 'ativo' ? 'Ativo' : 'Pausado'}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      className="btn-link danger"
+                      onClick={() => handleDeletar(projeto.id)}
+                    >
+                      Deletar
+                    </button>
+                  </td>
+                  <td>
+                    <button
+                      className="btn-link"
+                      onClick={() => navigate(`/admin/projetos/${projeto.id}`)}
+                    >
+                      Ver →
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-
-              <tbody>
-                {projetos.map((projeto) => (
-                  <tr key={projeto.id}>
-                    <td>
-                      <strong>{projeto.nome || 'N/A'}</strong>
-                    </td>
-
-                    <td>
-  {projeto.consultor_nome || 'N/A'}
-</td>
-
-                    <td>
-                      Mês {projeto.duracao_meses || 12}
-                    </td>
-
-                    <td>
-                      <span className="badge badge-success">
-                        {projeto.status}
-                      </span>
-                    </td>
-
-                    <td>
-                      <button className="btn-link">Ver</button>
-
-                      <button 
-                        className="btn-link danger"
-                        onClick={() => handleDeletar(projeto.id)}
-                      >
-                        Deletar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
+      {/* Modal novo projeto */}
       {showModal && (
-        <div 
-          className="modal-overlay" 
-          onClick={() => setShowModal(false)}
-        >
-          <div 
-            className="modal-box" 
-            onClick={e => e.stopPropagation()}
-          >
-            <h2>Novo Projeto</h2>
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
 
-            <form onSubmit={handleCriar}>
-              <div className="form-group">
-                <label>Nome do Cliente *</label>
-                <input
-                  type="text"
-                  value={formData.nome}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nome: e.target.value })
-                  }
-                  required
-                />
-              </div>
+            <div className="modal-header">
+              <h3>Novo projeto</h3>
+              <div className="modal-sub">Preencha os dados do cliente e consultor responsável</div>
+            </div>
 
-              <div className="form-group">
-                <label>Consultor Responsável *</label>
-                <select
-                  value={formData.consultor_id}
-                  onChange={(e) =>
-                    setFormData({ ...formData, consultor_id: e.target.value })
-                  }
-                  required
-                >
-                  {CONSULTORES.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.nome} - {c.especialidade}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="modal-body">
+              <form onSubmit={handleCriar}>
 
-              <div className="form-group">
-                <label>Data de Início *</label>
-                <input
-                  type="date"
-                  value={formData.data_inicio}
-                  onChange={(e) =>
-                    setFormData({ ...formData, data_inicio: e.target.value })
-                  }
-                  required
-                />
-              </div>
+                <div className="form-group">
+                  <label className="form-label">Nome do cliente *</label>
+                  <input
+                    className="inp"
+                    type="text"
+                    placeholder="Ex: Supermercado Bom Preço"
+                    value={formData.nome}
+                    onChange={e => setFormData({ ...formData, nome: e.target.value })}
+                    required
+                  />
+                </div>
 
-              <div className="form-group">
-                <label>Duração (meses)</label>
-                <input
-                  type="number"
-                  value={formData.duracao_meses}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      duracao_meses: parseInt(e.target.value)
-                    })
-                  }
-                  min="1"
-                  max="24"
-                />
-              </div>
+                <div className="form-group">
+                  <label className="form-label">Consultor responsável *</label>
+                  <select
+                    className="inp"
+                    value={formData.consultor_id}
+                    onChange={e => setFormData({ ...formData, consultor_id: e.target.value })}
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    {consultores.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.nome}{c.especialidade ? ` — ${c.especialidade}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancelar
-                </button>
+                <div className="form-row cols-2">
+                  <div className="form-group">
+                    <label className="form-label">Data de início *</label>
+                    <input
+                      className="inp"
+                      type="date"
+                      value={formData.data_inicio}
+                      onChange={e => setFormData({ ...formData, data_inicio: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Duração (meses)</label>
+                    <input
+                      className="inp"
+                      type="number"
+                      min="1"
+                      max="24"
+                      value={formData.duracao_meses}
+                      onChange={e => setFormData({ ...formData, duracao_meses: parseInt(e.target.value) })}
+                    />
+                  </div>
+                </div>
 
-                <button 
-                  type="submit" 
-                  className="btn btn-primary"
-                >
-                  Criar
-                </button>
-              </div>
-            </form>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={salvando}>
+                    {salvando ? 'Salvando...' : 'Criar projeto'}
+                  </button>
+                </div>
+
+              </form>
+            </div>
+
           </div>
         </div>
       )}

@@ -6,7 +6,8 @@ import './RelatoriosPage.css';
 
 function RelatoriosPage() {
   const [relatorios, setRelatorios] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]       = useState(true);
+  const [erro, setErro]             = useState(null);
 
   useEffect(() => {
     carregarRelatorios();
@@ -15,52 +16,69 @@ function RelatoriosPage() {
   const carregarRelatorios = async () => {
     try {
       setLoading(true);
+      setErro(null);
       const response = await relatoriosService.listar();
-      const relatoriosData = response.relatorios || [];
-      setRelatorios(relatoriosData);
+      setRelatorios(response.relatorios || []);
     } catch (error) {
-      console.error('Erro ao carregar relatórios:', error);
+      setErro('Erro ao carregar relatórios.');
     } finally {
       setLoading(false);
     }
   };
 
+  const formatarData = (data) => {
+    if (!data) return '—';
+    return new Date(data).toLocaleDateString('pt-BR');
+  };
+
   return (
     <MainLayout>
-      <Topbar 
-        title="Relatórios" 
-        subtitle="Histórico de atividades realizadas"
-      />
+      <Topbar title="Relatórios" subtitle="Histórico de atividades realizadas pelos consultores" />
 
-      <div className="page-content">
-        <div className="card">
-          <h3 className="card-title">Relatórios</h3>
-          {loading ? (
-            <p style={{ textAlign: 'center', color: '#999' }}>Carregando...</p>
-          ) : relatorios.length > 0 ? (
-            <div>
-              {relatorios.map((relatorio) => (
-                <div key={relatorio.id} style={{
-                  padding: '12px',
-                  borderBottom: '1px solid #eee',
-                  marginBottom: '10px'
-                }}>
-                  <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                    Atividade: {relatorio.atividade_id}
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
-                    {relatorio.o_que_foi_realizado}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#999' }}>
-                    {new Date(relatorio.enviado_em).toLocaleDateString('pt-BR')}
-                  </div>
-                </div>
+      {erro && <div className="alert alert-error">{erro}</div>}
+
+      <div className="card">
+        <div className="card-title">Relatórios enviados</div>
+
+        {loading ? (
+          <p className="empty-state">Carregando...</p>
+        ) : relatorios.length === 0 ? (
+          <p className="empty-state">Nenhum relatório enviado ainda.</p>
+        ) : (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Atividade</th>
+                <th>Projeto</th>
+                <th>Consultor</th>
+                <th>Mês / Semana</th>
+                <th>Enviado em</th>
+              </tr>
+            </thead>
+            <tbody>
+              {relatorios.map((rel) => (
+                <tr key={rel.id}>
+                  <td>
+                    <strong>{rel.atividade_titulo || '—'}</strong>
+                    {rel.o_que_foi_realizado && (
+                      <div style={{ fontSize: 12, color: 'var(--mx)', marginTop: 2 }}>
+                        {rel.o_que_foi_realizado.length > 60
+                          ? rel.o_que_foi_realizado.slice(0, 60) + '...'
+                          : rel.o_que_foi_realizado}
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ color: 'var(--mx)' }}>{rel.projeto_nome || '—'}</td>
+                  <td style={{ color: 'var(--mx)' }}>{rel.consultor_nome || '—'}</td>
+                  <td style={{ color: 'var(--mx)' }}>
+                    {rel.mes ? `Mês ${rel.mes} · S${rel.semana}` : '—'}
+                  </td>
+                  <td style={{ color: 'var(--mx)' }}>{formatarData(rel.enviado_em)}</td>
+                </tr>
               ))}
-            </div>
-          ) : (
-            <p style={{ textAlign: 'center', color: '#999' }}>Nenhum relatório</p>
-          )}
-        </div>
+            </tbody>
+          </table>
+        )}
       </div>
     </MainLayout>
   );

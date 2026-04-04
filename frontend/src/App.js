@@ -9,6 +9,8 @@ import RelatoriosPage from './pages/RelatoriosPage';
 import CobrancasPage from './pages/CobrancasPage';
 import NotificacoesPage from './pages/NotificacoesPage';
 import ConsultorDashboard from './pages/ConsultorDashboard';
+import ProjetoDetalhePage from './pages/ProjetoDetalhePage';
+import ConsultorProjetosPage from './pages/ConsultorProjetosPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import './App.css';
 
@@ -38,6 +40,7 @@ function AppContent() {
       {/* ADMIN ROUTES */}
       <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
       <Route path="/admin/projetos" element={<ProtectedRoute requiredRole="admin"><AdminProjectsPage /></ProtectedRoute>} />
+      <Route path="/admin/projetos/:id" element={<ProtectedRoute requiredRole="admin"><ProjetoDetalhePage /></ProtectedRoute>} />
       <Route path="/admin/kanban" element={<ProtectedRoute requiredRole="admin"><KanbanPage /></ProtectedRoute>} />
       <Route path="/admin/relatorios" element={<ProtectedRoute requiredRole="admin"><RelatoriosPage /></ProtectedRoute>} />
       <Route path="/admin/cobrancas" element={<ProtectedRoute requiredRole="admin"><CobrancasPage /></ProtectedRoute>} />
@@ -47,7 +50,8 @@ function AppContent() {
 
       {/* CONSULTOR ROUTES */}
       <Route path="/consultor/dashboard" element={<ProtectedRoute requiredRole="consultor"><ConsultorDashboard /></ProtectedRoute>} />
-      <Route path="/consultor/projetos" element={<ProtectedRoute requiredRole="consultor"><PlaceholderPage title="Meus Projetos" subtitle="Projetos atribuídos" /></ProtectedRoute>} />
+      <Route path="/consultor/projetos" element={<ProtectedRoute requiredRole="consultor"><ConsultorProjetosPage /></ProtectedRoute>} />
+      <Route path="/consultor/projetos/:id" element={<ProtectedRoute requiredRole="consultor"><ProjetoDetalhePage /></ProtectedRoute>} />
       <Route path="/consultor/kanban" element={<ProtectedRoute requiredRole="consultor"><KanbanPage /></ProtectedRoute>} />
       <Route path="/consultor/relatorios" element={<ProtectedRoute requiredRole="consultor"><RelatoriosPage /></ProtectedRoute>} />
       <Route path="/consultor/notificacoes" element={<ProtectedRoute requiredRole="consultor"><NotificacoesPage /></ProtectedRoute>} />

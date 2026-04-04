@@ -1,1 +1,46 @@
-@import './PagesStyles.css';
+/* ── ITEM DE NOTIFICAÇÃO ── */
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.notif-item:last-child { border-bottom: none; }
+
+.notif-item.nao-lida {
+  background: #fffbf5;
+  margin: 0 -1.25rem;
+  padding: 12px 1.25rem;
+  border-left: 3px solid #f59e0b;
+}
+
+/* Dot */
+.notif-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+/* Conteúdo */
+.notif-conteudo { flex: 1; min-width: 0; }
+
+.notif-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tx);
+  margin-bottom: 2px;
+}
+
+.notif-mensagem {
+  font-size: 12px;
+  color: var(--mx);
+  margin-bottom: 4px;
+}
+
+.notif-data {
+  font-size: 11px;
+  color: var(--hx);
+}
