@@ -70,6 +70,11 @@ export const projetosService = {
   deletar: async (id) => {
     const response = await api.delete(`/projetos/${id}`);
     return response.data;
+  },
+
+  meuProjeto: async () => {
+    const response = await api.get('/projetos/cliente');
+    return response.data;
   }
 };
 
@@ -136,6 +141,11 @@ export const cobrancasService = {
     return response.data;
   },
 
+  responder: async (id, resposta) => {
+    const response = await api.put(`/cobrancas/${id}/responder`, { resposta });
+    return response.data;
+  },
+
   atualizar: async (id, dados) => {
     const response = await api.put(`/cobrancas/${id}`, dados);
     return response.data;
@@ -184,6 +194,43 @@ export const notificacoesService = {
 export const usuariosService = {
   listarConsultores: async () => {
     const response = await api.get('/usuarios/consultores');
+    return response.data;
+  },
+
+  listarTodos: async () => {
+    const response = await api.get('/usuarios');
+    return response.data;
+  },
+
+  listarComMetricas: async () => {
+    const response = await api.get('/usuarios/consultores/metricas');
+    return response.data;
+  },
+
+  atualizar: async (id, dados) => {
+    const response = await api.put(`/usuarios/${id}`, dados);
+    return response.data;
+  },
+
+  criar: async (dados) => {
+    const response = await api.post('/usuarios', dados);
+    return response.data;
+  },
+
+  detalhe: async (id) => {
+    const response = await api.get(`/usuarios/${id}/detalhes`);
+    return response.data;
+  }
+};
+
+// Resumos de semana
+export const semanaResumosService = {
+  listar: async (projetoId) => {
+    const response = await api.get('/semana-resumos', { params: { projetoId } });
+    return response.data;
+  },
+  salvar: async (dados) => {
+    const response = await api.post('/semana-resumos', dados);
     return response.data;
   }
 };

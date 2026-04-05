@@ -11,6 +11,7 @@ import relatoriosRoutes from './routes/relatorios.js';
 import cobrancasRoutes from './routes/cobrancas.js';
 import notificacoesRoutes from './routes/notificacoes.js';
 import usuariosRoutes from './routes/usuarios.js';
+import semanaResumosRoutes from './routes/semanaResumos.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,6 +34,7 @@ app.use('/api/relatorios', relatoriosRoutes);
 app.use('/api/cobrancas', cobrancasRoutes);
 app.use('/api/notificacoes', notificacoesRoutes);
 app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/semana-resumos', semanaResumosRoutes);
 
 // Tratamento de erros 404
 app.use((req, res) => {

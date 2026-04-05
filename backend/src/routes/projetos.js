@@ -5,10 +5,14 @@ import {
   obterProjeto,
   criarProjeto,
   atualizarProjeto,
-  deletarProjeto
+  deletarProjeto,
+  projetoDoCliente
 } from '../controllers/projetoController.js';
 
 const router = express.Router();
+
+// Rota do portal cliente (deve vir ANTES de /:id)
+router.get('/cliente', verifyToken, projetoDoCliente);
 
 router.get('/', verifyToken, listarProjetos);
 router.get('/:id', verifyToken, obterProjeto);

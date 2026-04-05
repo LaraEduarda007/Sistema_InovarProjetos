@@ -15,7 +15,9 @@ function Login() {
   // Ao trocar a aba, preenche o e-mail de exemplo para facilitar testes
   const mudarPerfil = (novoPerfil) => {
     setPerfil(novoPerfil);
-    setEmail(novoPerfil === 'admin' ? 'lara@inovarvarejo.com.br' : 'ana@inovarvarejo.com.br');
+    if (novoPerfil === 'admin')     setEmail('lara@inovarvarejo.com.br');
+    else if (novoPerfil === 'consultor') setEmail('ana@inovarvarejo.com.br');
+    else setEmail('');
     setSenha('123456');
   };
 
@@ -23,11 +25,10 @@ function Login() {
     e.preventDefault();
     try {
       const resultado = await login(email, senha);
-      if (resultado.usuario.perfil === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/consultor/dashboard');
-      }
+      const p = resultado.usuario.perfil;
+      if (p === 'admin')      navigate('/admin/dashboard');
+      else if (p === 'cliente') navigate('/cliente/dashboard');
+      else                    navigate('/consultor/dashboard');
     } catch (err) {
       // erro já é tratado no AppContext
     }
@@ -61,6 +62,13 @@ function Login() {
             type="button"
           >
             Consultor
+          </button>
+          <button
+            className={`login-tab ${perfil === 'cliente' ? 'ativo' : ''}`}
+            onClick={() => mudarPerfil('cliente')}
+            type="button"
+          >
+            Cliente
           </button>
         </div>
 

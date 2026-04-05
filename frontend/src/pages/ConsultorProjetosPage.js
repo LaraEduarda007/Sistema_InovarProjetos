@@ -5,10 +5,11 @@ import Topbar from '../components/Topbar';
 import { projetosService, atividadesService } from '../services/api';
 
 function ConsultorProjetosPage() {
-  const [projetos, setProjetos]         = useState([]);
+  const [projetos, setProjetos]           = useState([]);
   const [pendenciasPorProjeto, setPendencias] = useState({});
-  const [loading, setLoading]           = useState(true);
-  const [erro, setErro]                 = useState(null);
+  const [progressoMap, setProgressoMap]   = useState({});
+  const [loading, setLoading]             = useState(true);
+  const [erro, setErro]                   = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,8 +37,31 @@ function ConsultorProjetosPage() {
         }
       });
 
+      // Progresso: semanas completas / total semanas do projeto
+      const semanasAgrupadas = {};
+      for (const a of atividadesData) {
+        const chave = `${a.projeto_id}__${a.mes}__${a.semana}`;
+        if (!semanasAgrupadas[chave]) semanasAgrupadas[chave] = { projeto_id: a.projeto_id, total: 0, concluidas: 0 };
+        semanasAgrupadas[chave].total++;
+        if (a.status === 'concluido') semanasAgrupadas[chave].concluidas++;
+      }
+
+      const semanasCompletas = {};
+      for (const s of Object.values(semanasAgrupadas)) {
+        if (!semanasCompletas[s.projeto_id]) semanasCompletas[s.projeto_id] = 0;
+        if (s.total > 0 && s.concluidas === s.total) semanasCompletas[s.projeto_id]++;
+      }
+
+      const mapa = {};
+      for (const p of projetosData) {
+        const totalSemanas = (p.duracao_meses || 12) * 4;
+        const completas = semanasCompletas[p.id] || 0;
+        mapa[p.id] = { completas, totalSemanas, pct: Math.round((completas / totalSemanas) * 100) };
+      }
+
       setProjetos(projetosData);
       setPendencias(pendencias);
+      setProgressoMap(mapa);
     } catch (err) {
       setErro('Erro ao carregar projetos.');
     } finally {
@@ -45,20 +69,14 @@ function ConsultorProjetosPage() {
     }
   };
 
-  const calcularProgresso = (projeto) => {
-    if (!projeto.data_inicio) return 0;
-    const inicio = new Date(projeto.data_inicio);
-    const hoje = new Date();
-    const meses = (hoje.getFullYear() - inicio.getFullYear()) * 12 + (hoje.getMonth() - inicio.getMonth());
-    return Math.min(Math.max(Math.round((meses / projeto.duracao_meses) * 100), 0), 100);
-  };
+  const calcularProgresso = (projeto) => progressoMap[projeto.id]?.pct || 0;
 
   const calcularMesAtual = (projeto) => {
     if (!projeto.data_inicio) return '—';
     const inicio = new Date(projeto.data_inicio);
     const hoje = new Date();
     const mes = (hoje.getFullYear() - inicio.getFullYear()) * 12 + (hoje.getMonth() - inicio.getMonth()) + 1;
-    return `Mês ${Math.min(mes, projeto.duracao_meses)}`;
+    return `Mês ${Math.min(Math.max(mes, 1), projeto.duracao_meses)}`;
   };
 
   return (

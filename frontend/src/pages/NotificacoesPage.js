@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../components/MainLayout';
 import Topbar from '../components/Topbar';
-import { notificacoesService } from '../services/api';
+import { notificacoesService, cobrancasService } from '../services/api';
 import './NotificacoesPage.css';
 
 function NotificacoesPage() {
@@ -9,9 +9,13 @@ function NotificacoesPage() {
   const [loading, setLoading]           = useState(true);
   const [erro, setErro]                 = useState(null);
 
-  useEffect(() => {
-    carregarNotificacoes();
-  }, []);
+  // Cobrança expandida para resposta
+  const [cobrandoId, setCobrandoId]     = useState(null); // id da notificacao
+  const [cobrancaDetalhe, setCobrancaDetalhe] = useState(null); // dados da cobrança
+  const [resposta, setResposta]         = useState('');
+  const [enviandoResp, setEnviandoResp] = useState(false);
+
+  useEffect(() => { carregarNotificacoes(); }, []);
 
   const carregarNotificacoes = async () => {
     try {
@@ -19,7 +23,7 @@ function NotificacoesPage() {
       setErro(null);
       const response = await notificacoesService.listar();
       setNotificacoes(response.notificacoes || []);
-    } catch (error) {
+    } catch {
       setErro('Erro ao carregar notificações.');
     } finally {
       setLoading(false);
@@ -29,8 +33,8 @@ function NotificacoesPage() {
   const marcarComoLida = async (id) => {
     try {
       await notificacoesService.marcarComoLida(id);
-      carregarNotificacoes();
-    } catch (error) {
+      setNotificacoes(prev => prev.map(n => n.id === id ? { ...n, lida: 1 } : n));
+    } catch {
       setErro('Erro ao marcar notificação.');
     }
   };
@@ -39,17 +43,44 @@ function NotificacoesPage() {
     try {
       await notificacoesService.marcarTodasComoLidas();
       carregarNotificacoes();
-    } catch (error) {
+    } catch {
       setErro('Erro ao marcar todas como lidas.');
     }
   };
 
-  const formatarData = (data) => {
-    if (!data) return '';
-    return new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const abrirResposta = async (notif) => {
+    setCobrandoId(notif.id);
+    setResposta('');
+    setCobrancaDetalhe(null);
+    try {
+      const res = await cobrancasService.obter(notif.relacao_id);
+      setCobrancaDetalhe(res.cobranca || null);
+    } catch {
+      setCobrancaDetalhe(null);
+    }
   };
 
-  // Cor do dot por tipo de notificação
+  const handleResponder = async (e) => {
+    e.preventDefault();
+    if (!cobrancaDetalhe) return;
+    try {
+      setEnviandoResp(true);
+      await cobrancasService.responder(cobrancaDetalhe.id, resposta);
+      // Marca a notificação como lida também
+      const notif = notificacoes.find(n => n.id === cobrandoId);
+      if (notif && !notif.lida) await marcarComoLida(cobrandoId);
+      setCobrandoId(null);
+      setCobrancaDetalhe(prev => ({ ...prev, resposta, status: 'respondida' }));
+      carregarNotificacoes();
+    } catch (err) {
+      setErro(err?.response?.data?.erro || 'Erro ao enviar resposta.');
+    } finally {
+      setEnviandoResp(false);
+    }
+  };
+
+  const fmt = (d) => d ? new Date(d).toLocaleDateString('pt-BR') : '';
+
   const dotCor = (tipo) => {
     if (tipo === 'cobranca') return '#f59e0b';
     if (tipo === 'relatorio') return 'var(--green2)';
@@ -79,25 +110,81 @@ function NotificacoesPage() {
         ) : (
           <div>
             {notificacoes.map((notif) => (
-              <div key={notif.id} className={`notif-item ${!notif.lida ? 'nao-lida' : ''}`}>
-                {/* Dot colorido */}
-                <div className="notif-dot" style={{ background: dotCor(notif.tipo) }} />
+              <div key={notif.id}>
+                <div className={`notif-item ${!notif.lida ? 'nao-lida' : ''}`}>
+                  <div className="notif-dot" style={{ background: dotCor(notif.tipo) }} />
 
-                {/* Conteúdo */}
-                <div className="notif-conteudo">
-                  <div className="notif-titulo">{notif.titulo}</div>
-                  <div className="notif-mensagem">{notif.mensagem}</div>
-                  <div className="notif-data">{formatarData(notif.data_criacao)}</div>
+                  <div className="notif-conteudo">
+                    <div className="notif-titulo">{notif.titulo}</div>
+                    <div className="notif-mensagem">{notif.mensagem}</div>
+                    <div className="notif-data">{fmt(notif.data_criacao)}</div>
+                  </div>
+
+                  <div className="notif-acoes">
+                    {/* Cobrança: botão responder (ou status) */}
+                    {notif.tipo === 'cobranca' && notif.relacao_id && (
+                      cobrandoId === notif.id
+                        ? <button className="btn btn-secondary btn-xs" onClick={() => setCobrandoId(null)}>Fechar</button>
+                        : <button className="btn btn-warning btn-xs" onClick={() => abrirResposta(notif)}>
+                            Responder
+                          </button>
+                    )}
+                    {/* Marcar como lida */}
+                    {!notif.lida && (
+                      <button className="btn btn-secondary btn-xs" onClick={() => marcarComoLida(notif.id)}>
+                        Marcar como lida
+                      </button>
+                    )}
+                    {notif.lida && <span className="notif-lida-tag">✓ Lida</span>}
+                  </div>
                 </div>
 
-                {/* Ação */}
-                {!notif.lida && (
-                  <button
-                    className="btn btn-secondary btn-xs"
-                    onClick={() => marcarComoLida(notif.id)}
-                  >
-                    Marcar como lida
-                  </button>
+                {/* Painel de resposta expandível */}
+                {cobrandoId === notif.id && (
+                  <div className="notif-resposta-panel">
+                    {cobrancaDetalhe ? (
+                      <>
+                        {cobrancaDetalhe.mensagem && (
+                          <div className="notif-cob-msg">
+                            <div className="notif-cob-label">Mensagem do administrador</div>
+                            <p>{cobrancaDetalhe.mensagem}</p>
+                          </div>
+                        )}
+
+                        {cobrancaDetalhe.resposta ? (
+                          <div className="notif-cob-respondida">
+                            <div className="notif-cob-label">Sua resposta (enviada)</div>
+                            <p>{cobrancaDetalhe.resposta}</p>
+                          </div>
+                        ) : (
+                          <form onSubmit={handleResponder}>
+                            <label className="form-label" style={{ marginBottom: '.4rem', display: 'block' }}>
+                              Sua resposta
+                            </label>
+                            <textarea
+                              className="inp"
+                              rows="3"
+                              placeholder="Descreva o que foi feito ou informe a situação das atividades..."
+                              value={resposta}
+                              onChange={e => setResposta(e.target.value)}
+                              required
+                              style={{ resize: 'vertical' }}
+                            />
+                            <div style={{ display: 'flex', gap: '.5rem', marginTop: '.5rem' }}>
+                              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setCobrandoId(null)}>
+                                Cancelar
+                              </button>
+                              <button type="submit" className="btn btn-warning btn-sm" disabled={enviandoResp}>
+                                {enviandoResp ? 'Enviando...' : 'Enviar resposta'}
+                              </button>
+                            </div>
+                          </form>
+                        )}
+                      </>
+                    ) : (
+                      <p style={{ color: 'var(--mx)', fontSize: '.85rem' }}>Carregando detalhes...</p>
+                    )}
+                  </div>
                 )}
               </div>
             ))}

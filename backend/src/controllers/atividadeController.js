@@ -7,20 +7,22 @@ export async function listarAtividades(req, res) {
     const { perfil, id: usuarioId } = req.usuario;
 
     let sql = `
-      SELECT a.*, u.nome as consultor_nome, r.id as relatorio_id
+      SELECT a.*, u.nome as consultor_nome, r.id as relatorio_id, p.nome as projeto_nome
       FROM atividades a
       LEFT JOIN usuarios u ON a.consultor_id = u.id
       LEFT JOIN relatorios r ON a.id = r.atividade_id
+      LEFT JOIN projetos p ON a.projeto_id = p.id
     `;
     let params = [];
 
     if (projetoId) {
+      // Com projeto específico, consultor vê todas as atividades do projeto
       sql += ' WHERE a.projeto_id = ?';
       params.push(projetoId);
-
-      // Consultores veem apenas suas atividades
+    } else {
+      // Sem projeto específico (ex: Kanban), consultor vê só as suas
       if (perfil === 'consultor') {
-        sql += ' AND a.consultor_id = ?';
+        sql += ' WHERE a.consultor_id = ?';
         params.push(usuarioId);
       }
     }
@@ -64,13 +66,27 @@ export async function criarAtividade(req, res) {
 export async function atualizarAtividade(req, res) {
   try {
     const { id } = req.params;
-    const { status, dataPrevista, dataRealizacao } = req.body;
+    const { status, dataPrevista, dataRealizacao, observacao } = req.body;
 
-    await runQuery(`
-      UPDATE atividades 
-      SET status = ?, data_prevista = ?, data_realizacao = ?, atualizado_em = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `, [status, dataPrevista, dataRealizacao, id]);
+    // Atualiza apenas os campos informados (evita sobrescrever datas com null)
+    const sets = [];
+    const params = [];
+    if (status !== undefined)          { sets.push('status = ?');           params.push(status); }
+    if (dataPrevista !== undefined)    { sets.push('data_prevista = ?');    params.push(dataPrevista); }
+    if (dataRealizacao !== undefined)  { sets.push('data_realizacao = ?');  params.push(dataRealizacao); }
+    if (observacao !== undefined)      { sets.push('observacao = ?');       params.push(observacao); }
+
+    if (sets.length === 0) {
+      return res.status(400).json({ erro: 'Nenhum campo para atualizar' });
+    }
+
+    sets.push('atualizado_em = CURRENT_TIMESTAMP');
+    params.push(id);
+
+    await runQuery(
+      `UPDATE atividades SET ${sets.join(', ')} WHERE id = ?`,
+      params
+    );
 
     res.json({ sucesso: true, mensagem: 'Atividade atualizada com sucesso' });
   } catch (error) {

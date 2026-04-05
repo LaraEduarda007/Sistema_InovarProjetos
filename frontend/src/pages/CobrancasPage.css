@@ -1,5 +1,109 @@
-/* CobrancasPage — usa as classes globais do App.css */
-textarea.inp {
-  resize: vertical;
-  min-height: 80px;
+/* CobrancasPage */
+textarea.inp { resize: vertical; min-height: 80px; }
+
+/* ── Detalhes da cobrança ── */
+.cob-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+  margin-bottom: 1rem;
+}
+
+.cob-campo { display: flex; flex-direction: column; gap: 2px; }
+.cob-label {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--mx);
+}
+.cob-val { font-size: .9rem; color: var(--tx); }
+
+.cob-secao { margin-top: .75rem; }
+.cob-texto {
+  background: #f8fafc;
+  border: 1px solid var(--bdr);
+  border-radius: var(--rs);
+  padding: .65rem .85rem;
+  font-size: .88rem;
+  color: var(--tx);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  margin-top: .3rem;
+}
+
+.cob-resposta .cob-texto {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.cob-data-resp {
+  font-size: .75rem;
+  color: var(--mx);
+  margin-top: .35rem;
+}
+
+.cob-sem-resposta {
+  font-size: .84rem;
+  color: var(--mx);
+  font-style: italic;
+  margin-top: .75rem;
+}
+
+/* status-opts reaproveitados */
+.status-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+.status-opt {
+  flex: 1; min-width: 70px;
+  padding: 7px 6px;
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--rs);
+  font-size: 11px; font-weight: 700;
+  cursor: pointer; background: var(--white);
+  text-align: center; color: var(--hx);
+  font-family: inherit; transition: all .15s;
+}
+.status-opt:hover { border-color: var(--bdr2); }
+
+/* ── Lista de atividades para seleção na cobrança ── */
+.cob-atividades-lista {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--bdr);
+  border-radius: var(--rs);
+  padding: .4rem .5rem;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+
+.cob-ativ-check {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  padding: .4rem .35rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: .83rem;
+  transition: background .1s;
+  line-height: 1.4;
+}
+
+.cob-ativ-check:hover { background: var(--bdr2); }
+.cob-ativ-check input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; }
+
+/* Detalhes: atividades cobradas */
+.cob-atividades-detalhe {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  margin-top: .4rem;
+}
+
+.cob-ativ-tag {
+  font-size: .8rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 5px;
+  padding: .3rem .65rem;
+  color: #92400e;
 }

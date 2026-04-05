@@ -1,0 +1,347 @@
+/* Portal do Cliente */
+
+.cl-shell {
+  min-height: 100vh;
+  background: #f4f6fb;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Topbar */
+.cl-topbar {
+  background: var(--navy2);
+  color: #fff;
+  padding: .9rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.cl-logo {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  font-weight: 700;
+  font-size: .95rem;
+  color: #fff;
+}
+
+.cl-logo-i {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: .9rem;
+}
+
+.cl-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cl-user {
+  font-size: .82rem;
+  color: rgba(255,255,255,.8);
+}
+
+.cl-sair {
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.25);
+  color: #fff;
+  padding: .35rem .9rem;
+  border-radius: 6px;
+  font-size: .8rem;
+  cursor: pointer;
+  transition: background .2s;
+}
+.cl-sair:hover { background: rgba(255,255,255,.25); }
+
+/* Hero */
+.cl-hero {
+  background: linear-gradient(135deg, var(--navy2) 0%, var(--teal2) 100%);
+  color: #fff;
+  padding: 3rem 2rem 2.5rem;
+}
+
+.cl-hero-inner {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.cl-hero-label {
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: rgba(255,255,255,.7);
+  margin-bottom: .5rem;
+}
+
+.cl-hero-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0 0 .4rem;
+  color: #fff;
+}
+
+.cl-hero-sub {
+  font-size: .88rem;
+  color: rgba(255,255,255,.78);
+  margin-bottom: 1.25rem;
+}
+
+.cl-hero-prog {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.cl-prog-bg {
+  flex: 1;
+  max-width: 400px;
+  height: 10px;
+  background: rgba(255,255,255,.25);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cl-prog-fill {
+  height: 100%;
+  background: #fff;
+  border-radius: 10px;
+  transition: width .4s;
+}
+
+.cl-prog-label {
+  font-size: .82rem;
+  color: rgba(255,255,255,.85);
+  white-space: nowrap;
+}
+
+/* Corpo */
+.cl-body {
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Banner informativo */
+.cl-banner {
+  background: #e8f4fd;
+  border-left: 3px solid var(--navy2);
+  padding: .85rem 1.1rem;
+  border-radius: 6px;
+  font-size: .83rem;
+  color: #1a3a5c;
+  line-height: 1.5;
+}
+
+/* Métricas */
+.cl-metricas {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 700px) {
+  .cl-metricas { grid-template-columns: repeat(2, 1fr); }
+  .cl-hero-title { font-size: 1.3rem; }
+}
+
+.cl-mc {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  border: 1px solid var(--bdr);
+}
+
+.cl-mc-l {
+  font-size: .72rem;
+  color: var(--mx);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: .4rem;
+}
+
+.cl-mc-v {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--tx);
+  line-height: 1.1;
+  margin-bottom: .2rem;
+}
+
+.cl-mc-nome {
+  font-size: 1rem !important;
+  margin-top: .3rem;
+}
+
+.cl-mc-s {
+  font-size: .75rem;
+  color: var(--mx);
+}
+
+/* Seções */
+.cl-section {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  border: 1px solid var(--bdr);
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.cl-sec-title {
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--tx);
+  padding-bottom: .65rem;
+  border-bottom: 1px solid var(--bdr);
+  margin-bottom: .1rem;
+}
+
+/* Progresso por mês */
+.cl-mes-bar {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.cl-mes-nome {
+  font-size: .82rem;
+  color: var(--mx);
+  min-width: 52px;
+  flex-shrink: 0;
+}
+
+.cl-mes-prog-bg {
+  flex: 1;
+  height: 8px;
+  background: var(--bdr);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cl-mes-prog-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width .3s;
+}
+
+.cl-mes-pct {
+  font-size: .78rem;
+  font-weight: 600;
+  min-width: 34px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.cl-mes-badge {
+  font-size: .72rem;
+  padding: .18rem .6rem;
+  border-radius: 20px;
+  font-weight: 600;
+  min-width: 80px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Atividades */
+.cl-atv-item {
+  padding-bottom: .75rem;
+  border-bottom: 1px solid var(--bdr);
+}
+.cl-atv-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+.cl-atv-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: .5rem;
+  margin-bottom: .2rem;
+}
+
+.cl-atv-titulo {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--tx);
+}
+
+.cl-atv-meta {
+  font-size: .75rem;
+  color: var(--mx);
+}
+
+.cl-atv-obs {
+  font-size: .8rem;
+  color: var(--tx);
+  margin-top: .35rem;
+  line-height: 1.5;
+  background: var(--bdr2);
+  padding: .5rem .75rem;
+  border-radius: 5px;
+}
+
+/* Consultores */
+.cl-cons-row {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding-bottom: .75rem;
+  border-bottom: 1px solid var(--bdr);
+}
+.cl-cons-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.cl-av {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--navy-lt);
+  color: var(--navy2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.cl-cons-nome {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--tx);
+}
+
+.cl-cons-esp {
+  font-size: .77rem;
+  color: var(--mx);
+}
+
+/* Footer */
+.cl-footer {
+  text-align: center;
+  font-size: .78rem;
+  color: var(--mx);
+  padding: 1rem 0;
+}
+
+.cl-footer a {
+  color: var(--navy2);
+  font-weight: 600;
+  text-decoration: none;
+}

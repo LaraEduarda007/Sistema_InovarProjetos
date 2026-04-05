@@ -8,6 +8,7 @@ function AdminProjectsPage() {
   const navigate = useNavigate();
   const [projetos, setProjetos]         = useState([]);
   const [consultores, setConsultores]   = useState([]);
+  const [clientes, setClientes]         = useState([]);
   const [carregando, setCarregando]     = useState(true);
   const [erro, setErro]                 = useState(null);
   const [showModal, setShowModal]       = useState(false);
@@ -17,7 +18,9 @@ function AdminProjectsPage() {
     nome: '',
     data_inicio: '',
     duracao_meses: 12,
-    consultor_id: ''
+    consultor_id: '',
+    objetivo: '',
+    clienteUserId: ''
   });
 
   useEffect(() => {
@@ -29,14 +32,16 @@ function AdminProjectsPage() {
       setCarregando(true);
       setErro(null);
 
-      const [projetosRes, consultoresRes] = await Promise.all([
+      const [projetosRes, consultoresRes, todosRes] = await Promise.all([
         projetosService.listar(),
-        usuariosService.listarConsultores()
+        usuariosService.listarConsultores(),
+        usuariosService.listarTodos()
       ]);
 
       setProjetos(projetosRes.projetos || []);
       const lista = consultoresRes.consultores || [];
       setConsultores(lista);
+      setClientes((todosRes.usuarios || []).filter(u => u.perfil === 'cliente'));
 
       // Pré-seleciona o primeiro consultor
       if (lista.length > 0) {
@@ -55,7 +60,7 @@ function AdminProjectsPage() {
       setSalvando(true);
       await projetosService.criar(formData);
       setShowModal(false);
-      setFormData({ nome: '', data_inicio: '', duracao_meses: 12, consultor_id: consultores[0]?.id || '' });
+      setFormData({ nome: '', data_inicio: '', duracao_meses: 12, consultor_id: consultores[0]?.id || '', objetivo: '', clienteUserId: '' });
       carregarDados();
     } catch (err) {
       setErro('Erro ao criar projeto.');
@@ -64,13 +69,13 @@ function AdminProjectsPage() {
     }
   };
 
-  const handleDeletar = async (id) => {
-    if (!window.confirm('Tem certeza que deseja deletar este projeto?')) return;
+  const handleDeletar = async (id, nome) => {
+    if (!window.confirm(`Deletar o projeto "${nome}"?\n\nTodas as atividades e relatórios vinculados também serão removidos. Esta ação não pode ser desfeita.`)) return;
     try {
       await projetosService.deletar(id);
       carregarDados();
     } catch (err) {
-      setErro('Erro ao deletar projeto.');
+      setErro('Erro ao deletar projeto. Tente novamente.');
     }
   };
 
@@ -120,7 +125,7 @@ function AdminProjectsPage() {
                   <td>
                     <button
                       className="btn-link danger"
-                      onClick={() => handleDeletar(projeto.id)}
+                      onClick={() => handleDeletar(projeto.id, projeto.nome)}
                     >
                       Deletar
                     </button>
@@ -205,6 +210,37 @@ function AdminProjectsPage() {
                     />
                   </div>
                 </div>
+
+                <div className="form-group">
+                  <label className="form-label">Objetivo do projeto</label>
+                  <textarea
+                    className="inp"
+                    placeholder="Descreva o objetivo principal do projeto..."
+                    rows="3"
+                    value={formData.objetivo}
+                    onChange={e => setFormData({ ...formData, objetivo: e.target.value })}
+                    style={{ resize: 'vertical' }}
+                  />
+                </div>
+
+                {clientes.length > 0 && (
+                  <div className="form-group">
+                    <label className="form-label">Usuário cliente (portal)</label>
+                    <select
+                      className="inp"
+                      value={formData.clienteUserId}
+                      onChange={e => setFormData({ ...formData, clienteUserId: e.target.value })}
+                    >
+                      <option value="">Sem acesso de cliente</option>
+                      {clientes.map(c => (
+                        <option key={c.id} value={c.id}>{c.nome} — {c.email}</option>
+                      ))}
+                    </select>
+                    <div style={{ fontSize: '.75rem', color: 'var(--mx)', marginTop: '.25rem' }}>
+                      Vincula um usuário com perfil "Cliente" para acesso ao portal de acompanhamento.
+                    </div>
+                  </div>
+                )}
 
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>

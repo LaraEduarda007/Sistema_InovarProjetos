@@ -9,10 +9,11 @@ function ConsultorDashboard() {
   const { usuario } = useApp();
   const navigate = useNavigate();
 
-  const [projetos, setProjetos]     = useState([]);
-  const [pendentes, setPendentes]   = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [stats, setStats]           = useState({ ativos: 0, pendentes: 0, produtividade: 0 });
+  const [projetos, setProjetos]         = useState([]);
+  const [pendentes, setPendentes]       = useState([]);
+  const [progressoMap, setProgressoMap] = useState({});
+  const [loading, setLoading]           = useState(true);
+  const [stats, setStats]               = useState({ ativos: 0, pendentes: 0, produtividade: 0 });
 
   useEffect(() => {
     carregarDados();
@@ -37,10 +38,43 @@ function ConsultorDashboard() {
       );
       setPendentes(semRelatorio);
 
-      // Produtividade = concluídas / total
-      const concluidas = atividadesData.filter(a => a.status === 'concluido').length;
-      const total = atividadesData.length;
-      const prod = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+      // Produtividade = semanas completas / total semanas de todos os projetos
+      // (calculado junto com o progressoMap abaixo)
+
+      // Mapa de progresso por projeto (semanas completas / total semanas)
+      const semanasAgrupadas = {};
+      for (const a of atividadesData) {
+        const chave = `${a.projeto_id}__${a.mes}__${a.semana}`;
+        if (!semanasAgrupadas[chave]) {
+          semanasAgrupadas[chave] = { projeto_id: a.projeto_id, total: 0, concluidas: 0 };
+        }
+        semanasAgrupadas[chave].total++;
+        if (a.status === 'concluido') semanasAgrupadas[chave].concluidas++;
+      }
+
+      const semanasComplPorProjeto = {};
+      for (const s of Object.values(semanasAgrupadas)) {
+        if (!semanasComplPorProjeto[s.projeto_id]) semanasComplPorProjeto[s.projeto_id] = 0;
+        if (s.total > 0 && s.concluidas === s.total) semanasComplPorProjeto[s.projeto_id]++;
+      }
+
+      const mapa = {};
+      let totalSemanasGeral = 0;
+      let totalComplGeral = 0;
+
+      for (const p of projetosData) {
+        const totalSemanas = (p.duracao_meses || 12) * 4;
+        const completas = semanasComplPorProjeto[p.id] || 0;
+        mapa[p.id] = { completas, totalSemanas, pct: Math.round((completas / totalSemanas) * 100) };
+        totalSemanasGeral += totalSemanas;
+        totalComplGeral   += completas;
+      }
+
+      const prod = totalSemanasGeral > 0
+        ? Math.round((totalComplGeral / totalSemanasGeral) * 100)
+        : 0;
+
+      setProgressoMap(mapa);
 
       setStats({
         ativos: projetosData.filter(p => p.status === 'ativo').length,
@@ -55,11 +89,7 @@ function ConsultorDashboard() {
   };
 
   const calcularProgresso = (projeto) => {
-    if (!projeto.data_inicio) return 0;
-    const inicio = new Date(projeto.data_inicio);
-    const hoje = new Date();
-    const meses = (hoje.getFullYear() - inicio.getFullYear()) * 12 + (hoje.getMonth() - inicio.getMonth());
-    return Math.min(Math.max(Math.round((meses / projeto.duracao_meses) * 100), 0), 100);
+    return progressoMap[projeto.id]?.pct || 0;
   };
 
   // Iniciais para o avatar
@@ -150,7 +180,10 @@ function ConsultorDashboard() {
                 <div key={projeto.id} className="projeto-mini-row">
                   <div className="projeto-mini-nome">{projeto.nome}</div>
                   <div className="progress-wrap" style={{ flex: 1, maxWidth: 160 }}>
-                    <div className="progress-fill" style={{ width: `${pct}%` }} />
+                    <div className="progress-fill" style={{
+                      width: `${pct}%`,
+                      background: pct >= 70 ? 'var(--green2)' : pct >= 40 ? '#f59e0b' : 'var(--navy2)'
+                    }} />
                   </div>
                   <span style={{ fontSize: 12, color: 'var(--mx)', minWidth: 32 }}>{pct}%</span>
                   <button

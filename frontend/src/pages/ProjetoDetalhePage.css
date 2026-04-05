@@ -50,6 +50,34 @@
   opacity: 0.75;
 }
 
+.ph-objetivo {
+  font-size: 12px;
+  opacity: 0.65;
+  margin-top: 6px;
+  font-style: italic;
+  max-width: 600px;
+  line-height: 1.5;
+}
+
+/* Observação inline na atividade */
+.atividade-titulo-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.atividade-obs-preview {
+  font-size: .74rem;
+  color: var(--mx);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+}
+
 .ph-actions {
   display: flex;
   gap: 8px;
@@ -255,6 +283,14 @@
   background: var(--bg);
 }
 
+.atividade-atrasada {
+  background: #fffbf5;
+}
+
+.atividade-atrasada:hover {
+  background: #fff8f0;
+}
+
 .atividade-setor {
   font-size: 10px;
   font-weight: 700;
@@ -278,4 +314,59 @@
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+}
+
+/* ── CARDS DE RELATÓRIO NA ABA (reutiliza classes de RelatoriosPage) ── */
+.rel-lista         { display: flex; flex-direction: column; gap: .5rem; }
+
+.rel-item {
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.rel-item.expandido { border-color: var(--teal2); }
+
+.rel-item-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: .85rem 1rem;
+  cursor: pointer;
+  gap: 1rem;
+}
+
+.rel-item-header:hover { background: var(--bg); }
+
+.rel-item-esquerda { display: flex; flex-direction: column; gap: .2rem; flex: 1; min-width: 0; }
+.rel-item-titulo   { font-size: .9rem; color: var(--tx); }
+.rel-item-meta     { font-size: .75rem; color: var(--mx); }
+.rel-item-direita  { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
+.rel-item-data     { font-size: .75rem; color: var(--mx); white-space: nowrap; }
+.rel-item-icon     { font-size: .65rem; color: var(--mx); }
+
+.rel-item-body { display: none; border-top: 1px solid var(--bdr); background: var(--bg); }
+
+.rel-item.expandido .rel-item-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: .65rem 1.25rem;
+  padding: .9rem 1rem 1rem;
+}
+
+.rel-campo-label {
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--mx);
+  margin-bottom: .2rem;
+}
+
+.rel-campo-val {
+  font-size: .85rem;
+  color: var(--tx);
+  line-height: 1.5;
+  white-space: pre-wrap;
 }

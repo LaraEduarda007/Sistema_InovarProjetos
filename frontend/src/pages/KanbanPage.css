@@ -89,6 +89,95 @@
   justify-content: space-between;
 }
 
+/* ── NOME DO PROJETO NO CARD ── */
+.kanban-projeto {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--teal2);
+  margin-bottom: 4px;
+}
+
+/* ── TOOLBAR (filtro) ── */
+.kanban-toolbar {
+  margin-bottom: 1rem;
+}
+
+/* ── MODAL DO KANBAN ── */
+.kanban-modal-box {
+  max-width: 480px;
+}
+
+.kanban-modal-projeto {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--teal2);
+  margin-bottom: 4px;
+}
+
+.kanban-modal-meta {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-bottom: .75rem;
+}
+
+.kanban-modal-info {
+  font-size: .8rem;
+  color: var(--mx);
+}
+
+.kanban-modal-obs {
+  margin-bottom: .5rem;
+}
+
+.kanban-modal-label {
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--mx);
+  margin-bottom: .4rem;
+}
+
+.kanban-modal-val {
+  font-size: .88rem;
+  color: var(--tx);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* ── status-opts reutilizado do ProjetoDetalhePage ── */
+.status-opts {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.status-opt {
+  flex: 1;
+  min-width: 80px;
+  padding: 7px 6px;
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--rs);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--white);
+  text-align: center;
+  color: var(--hx);
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.status-opt:hover {
+  border-color: var(--bdr2);
+}
+
 /* Responsivo */
 @media (max-width: 900px) {
   .kanban-board {
